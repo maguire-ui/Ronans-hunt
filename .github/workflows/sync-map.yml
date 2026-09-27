@@ -1,0 +1,31 @@
+name: Sync map asset
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/sync-map.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-map:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download current scavenger hunt map
+        run: |
+          curl -L --fail --retry 3 "https://at.adobe.com/nuxMxYpgCXUPguBF" -o carson-map.png
+          test -s carson-map.png
+
+      - name: Commit map asset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add carson-map.png
+          git commit -m "Add Carson Park hunt map"
+          git push
