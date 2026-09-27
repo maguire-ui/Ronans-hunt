@@ -19,7 +19,7 @@ jobs:
 
       - name: Download current scavenger hunt map
         run: |
-          curl -L --fail --retry 3 "https://at.adobe.com/D4PuVcav22roFERO" -o carson-map.png
+          curl -L --fail --retry 3 "https://at.adobe.com/pEl0fXw4WttjiOOj" -o carson-map.png
           test -s carson-map.png
 
       - name: Commit map asset
