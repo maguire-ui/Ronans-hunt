@@ -110,7 +110,12 @@
       -webkit-user-drag: none;
     }
 
-    .scene.unlocking .map-card img,
+    .scene.unlocking .map-card img {
+      opacity: .96;
+      filter: blur(1px);
+      transform: scale(1.015);
+    }
+
     .scene.unlocked .map-card img {
       opacity: 1;
       filter: blur(0);
