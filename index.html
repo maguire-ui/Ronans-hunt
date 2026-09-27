@@ -93,36 +93,50 @@
       overflow: hidden;
     }
 
-    .map-card img {
+    .map-photo {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: contain;
       object-position: center center;
-      opacity: 0;
-      filter: none;
-      transform: scale(1.012);
-      transition:
-        opacity 1.15s cubic-bezier(.22,.8,.25,1),
-        filter 1.15s cubic-bezier(.22,.8,.25,1),
-        transform 1.15s cubic-bezier(.22,.8,.25,1);
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
+      transition:
+        opacity 1.35s cubic-bezier(.22,.8,.25,1),
+        transform 1.35s cubic-bezier(.22,.8,.25,1);
     }
 
-    .scene.unlocking .map-card img {
+    .map-old {
+      z-index: 1;
+      opacity: 0;
+      transform: scale(1.012);
+    }
+
+    .map-new {
+      z-index: 2;
+      opacity: 0;
+      transform: scale(1.015);
+    }
+
+    .scene.unlocking .map-old,
+    .scene.unlocked .map-old {
       opacity: 1;
-      filter: none;
       transform: scale(1);
     }
 
-    .scene.unlocked .map-card img {
+    .scene.qr-swap .map-old {
+      opacity: 0;
+      transform: scale(.985);
+    }
+
+    .scene.qr-swap .map-new {
       opacity: 1;
-      filter: none;
       transform: scale(1);
     }
 
-    .map-card.focus-x img {
+    .map-card.focus-x .map-old {
       transform-origin: var(--focus-origin-x, 50%) var(--focus-origin-y, 50%);
       animation: focusOnX 3s cubic-bezier(.22,.72,.2,1) both;
     }
@@ -440,8 +454,8 @@
       .cloud { animation: none; }
       .scene.unlocking .cloud { animation-duration: 350ms !important; animation-delay: 0ms !important; }
       .scene.unlocking .shockwave { animation-duration: 400ms; }
-      .map-card img { transition: none; }
-      .map-card.focus-x img { animation: none; }
+      .map-photo { transition: none; }
+      .map-card.focus-x .map-old { animation: none; }
     }
   </style>
 </head>
@@ -449,7 +463,8 @@
   <main class="scene" id="scene" aria-label="Ronan Hunt password screen">
     <div class="map-stage">
       <div class="map-card">
-        <img src="./carson-map.png?v=redx3" alt="Illustrated neighborhood scavenger hunt map" />
+        <img id="oldMap" class="map-photo map-old" src="./carson-map.png?v=redx3" alt="Illustrated neighborhood scavenger hunt map" />
+        <img id="newMap" class="map-photo map-new" src="./satellite-map.png?v=clean2" alt="Satellite neighborhood scavenger hunt map" />
       </div>
     </div>
     <div class="tiny-mark" aria-hidden="true">Map unlocked</div>
@@ -515,11 +530,13 @@
       const scanStatus = document.getElementById('scanStatus');
       const qrFile = document.getElementById('qrFile');
       const mapCard = document.querySelector('.map-card');
-      const mapImage = mapCard.querySelector('img');
+      const oldMap = document.getElementById('oldMap');
+      const newMap = document.getElementById('newMap');
+      const mapImage = oldMap;
       const PASSWORD = '713489';
       const X_IMAGE_X = 0.3415;
       const X_IMAGE_Y = 0.3763;
-      const PROGRESS_KEY = 'ronanHuntProgress';
+      const PROGRESS_KEY = 'ronanHuntProgressV2';
       const NEXT_QR = 'RONAN-HUNT|STAGE-2|8D7K-PINE-42M';
       let unlocked = false;
       let qrScanner = null;
@@ -637,13 +654,8 @@
 
       function currentProgress(){return Number(localStorage.getItem(PROGRESS_KEY)||'1');}
       function updateScanButton(){
-        if(currentProgress()>=2){
-          scanCtaText.textContent='Continue Hunt';
-          scanCta.setAttribute('aria-label','Continue to clue two');
-        }else{
-          scanCtaText.textContent='Scan Next QR';
-          scanCta.setAttribute('aria-label','Scan the next hunt QR code');
-        }
+        scanCtaText.textContent='Scan Next QR';
+        scanCta.setAttribute('aria-label','Scan the next hunt QR code');
       }
       async function stopScanner(){
         if(!qrScanner||!scannerRunning)return;
@@ -667,13 +679,16 @@
         qrSolved=true;
         await stopScanner();
         localStorage.setItem(PROGRESS_KEY,'2');
-        updateScanButton();
         scanStatus.className='scan-status success';
-        scanStatus.textContent='Code accepted — clue 2 unlocked.';
-        setTimeout(()=>{location.href='./clue-2.html';},700);
+        scanStatus.textContent='Code accepted — map unlocked.';
+        scannerOverlay.classList.remove('open');
+        scannerOverlay.setAttribute('aria-hidden','true');
+        scanCta.classList.remove('show');
+        setTimeout(()=>{
+          scene.classList.add('qr-swap');
+        },120);
       }
       async function openScanner(){
-        if(currentProgress()>=2){location.href='./clue-2.html';return;}
         scannerOverlay.classList.add('open');
         scannerOverlay.setAttribute('aria-hidden','false');
         scanStatus.className='scan-status';
