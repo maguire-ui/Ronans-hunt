@@ -71,6 +71,52 @@
       opacity: .7;
     }
 
+
+    .map-stage {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(255,255,255,.5), transparent 32%),
+        linear-gradient(180deg, #e3e4cf 0%, #cfd5b7 100%);
+    }
+
+    .map-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .map-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      opacity: .18;
+      filter: blur(10px);
+      transform: scale(1.035);
+      transition:
+        opacity 1.15s cubic-bezier(.22,.8,.25,1),
+        filter 1.15s cubic-bezier(.22,.8,.25,1),
+        transform 1.15s cubic-bezier(.22,.8,.25,1);
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .scene.unlocking .map-card img,
+    .scene.unlocked .map-card img {
+      opacity: 1;
+      filter: blur(0);
+      transform: scale(1);
+    }
+
     .clouds {
       position: absolute;
       inset: -12vmax;
@@ -335,7 +381,7 @@
       font-size: 10px;
       letter-spacing: .2em;
       text-transform: uppercase;
-      color: rgba(255,255,255,.18);
+      color: rgba(17,35,46,.38);
       opacity: 0;
       transition: opacity .8s ease 1.5s;
     }
@@ -353,13 +399,18 @@
       .cloud { animation: none; }
       .scene.unlocking .cloud { animation-duration: 350ms !important; animation-delay: 0ms !important; }
       .scene.unlocking .shockwave { animation-duration: 400ms; }
+      .map-card img { transition: none; }
     }
   </style>
 </head>
 <body>
   <main class="scene" id="scene" aria-label="Ronan Hunt password screen">
-    <div class="underlay" aria-hidden="true"></div>
-    <div class="tiny-mark" aria-hidden="true">Hunt unlocked</div>
+    <div class="map-stage">
+      <div class="map-card">
+        <img src="./carson-map.png" alt="Illustrated neighborhood scavenger hunt map" />
+      </div>
+    </div>
+    <div class="tiny-mark" aria-hidden="true">Map unlocked</div>
     <div class="clouds" id="clouds" aria-hidden="true"></div>
     <div class="vignette" aria-hidden="true"></div>
     <div class="shockwave" aria-hidden="true"></div>
