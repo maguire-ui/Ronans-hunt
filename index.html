@@ -122,6 +122,26 @@
       transform: scale(1);
     }
 
+    .map-card.focus-x img {
+      transform-origin: var(--focus-origin-x, 50%) var(--focus-origin-y, 50%);
+      animation: focusOnX 2.4s cubic-bezier(.22,.72,.2,1) both;
+    }
+
+    @keyframes focusOnX {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+      42% {
+        transform: translate(var(--focus-dx, 0px), var(--focus-dy, 0px)) scale(2.25);
+      }
+      58% {
+        transform: translate(var(--focus-dx, 0px), var(--focus-dy, 0px)) scale(2.25);
+      }
+      100% {
+        transform: translate(0, 0) scale(1);
+      }
+    }
+
     .clouds {
       position: absolute;
       inset: -12vmax;
@@ -405,6 +425,7 @@
       .scene.unlocking .cloud { animation-duration: 350ms !important; animation-delay: 0ms !important; }
       .scene.unlocking .shockwave { animation-duration: 400ms; }
       .map-card img { transition: none; }
+      .map-card.focus-x img { animation: none; }
     }
   </style>
 </head>
@@ -457,7 +478,11 @@
       const input = document.getElementById('codeInput');
       const shell = document.getElementById('codeShell');
       const message = document.getElementById('message');
+      const mapCard = document.querySelector('.map-card');
+      const mapImage = mapCard.querySelector('img');
       const PASSWORD = '713489';
+      const X_IMAGE_X = 0.3415;
+      const X_IMAGE_Y = 0.3763;
       let unlocked = false;
 
       // Dense, full-screen cloud cover — intentionally no empty center around the title.
@@ -525,6 +550,45 @@
         });
       }
 
+      function prepXFocus() {
+        const r = mapImage.getBoundingClientRect();
+        const imageRatio = mapImage.naturalWidth / mapImage.naturalHeight;
+        const boxRatio = r.width / r.height;
+
+        let shownWidth;
+        let shownHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (imageRatio > boxRatio) {
+          shownWidth = r.width;
+          shownHeight = r.width / imageRatio;
+          offsetY = (r.height - shownHeight) / 2;
+        } else {
+          shownHeight = r.height;
+          shownWidth = r.height * imageRatio;
+          offsetX = (r.width - shownWidth) / 2;
+        }
+
+        const xLocal = offsetX + shownWidth * X_IMAGE_X;
+        const yLocal = offsetY + shownHeight * X_IMAGE_Y;
+        const dx = r.width / 2 - xLocal;
+        const dy = r.height / 2 - yLocal;
+
+        mapImage.style.setProperty('--focus-origin-x', `${xLocal}px`);
+        mapImage.style.setProperty('--focus-origin-y', `${yLocal}px`);
+        mapImage.style.setProperty('--focus-dx', `${dx}px`);
+        mapImage.style.setProperty('--focus-dy', `${dy}px`);
+      }
+
+      function focusOnX() {
+        prepXFocus();
+        mapCard.classList.remove('focus-x');
+        void mapCard.offsetWidth;
+        mapCard.classList.add('focus-x');
+        setTimeout(() => mapCard.classList.remove('focus-x'), 2450);
+      }
+
       function rejectCode() {
         shell.classList.remove('shake');
         void shell.offsetWidth;
@@ -543,6 +607,7 @@
         setTimeout(() => {
           scene.classList.remove('unlocking');
           scene.classList.add('unlocked');
+          setTimeout(focusOnX, 2000);
         }, 3250);
       }
 
@@ -568,7 +633,11 @@
       window.addEventListener('resize', () => {
         if (!unlocked) return;
         prepClearAnimation();
+        if (mapImage.complete) prepXFocus();
       }, { passive: true });
+
+      if (mapImage.complete) prepXFocus();
+      else mapImage.addEventListener('load', prepXFocus, { once: true });
     })();
   </script>
 </body>
