@@ -124,17 +124,17 @@
 
     .map-card.focus-x img {
       transform-origin: var(--focus-origin-x, 50%) var(--focus-origin-y, 50%);
-      animation: focusOnX 2.4s cubic-bezier(.22,.72,.2,1) both;
+      animation: focusOnX 4s cubic-bezier(.22,.72,.2,1) both;
     }
 
     @keyframes focusOnX {
       0% {
         transform: translate(0, 0) scale(1);
       }
-      42% {
+      25% {
         transform: translate(var(--focus-dx, 0px), var(--focus-dy, 0px)) scale(2.25);
       }
-      58% {
+      75% {
         transform: translate(var(--focus-dx, 0px), var(--focus-dy, 0px)) scale(2.25);
       }
       100% {
@@ -586,7 +586,7 @@
         mapCard.classList.remove('focus-x');
         void mapCard.offsetWidth;
         mapCard.classList.add('focus-x');
-        setTimeout(() => mapCard.classList.remove('focus-x'), 2450);
+        setTimeout(() => mapCard.classList.remove('focus-x'), 4050);
       }
 
       function rejectCode() {
@@ -607,7 +607,7 @@
         setTimeout(() => {
           scene.classList.remove('unlocking');
           scene.classList.add('unlocked');
-          setTimeout(focusOnX, 2000);
+          setTimeout(focusOnX, 1000);
         }, 3250);
       }
 
