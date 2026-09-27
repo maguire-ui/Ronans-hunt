@@ -124,17 +124,17 @@
 
     .map-card.focus-x img {
       transform-origin: var(--focus-origin-x, 50%) var(--focus-origin-y, 50%);
-      animation: focusOnX 4s cubic-bezier(.22,.72,.2,1) both;
+      animation: focusOnX 2s cubic-bezier(.2,.8,.2,1) both;
     }
 
     @keyframes focusOnX {
       0% {
         transform: translate(0, 0) scale(1);
       }
-      25% {
+      18% {
         transform: translate(var(--focus-dx, 0px), var(--focus-dy, 0px)) scale(2.25);
       }
-      75% {
+      68% {
         transform: translate(var(--focus-dx, 0px), var(--focus-dy, 0px)) scale(2.25);
       }
       100% {
@@ -586,7 +586,7 @@
         mapCard.classList.remove('focus-x');
         void mapCard.offsetWidth;
         mapCard.classList.add('focus-x');
-        setTimeout(() => mapCard.classList.remove('focus-x'), 4050);
+        setTimeout(() => mapCard.classList.remove('focus-x'), 2050);
       }
 
       function rejectCode() {
