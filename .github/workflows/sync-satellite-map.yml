@@ -1,0 +1,31 @@
+name: Sync satellite map asset
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/sync-satellite-map.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-satellite-map:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download clean satellite map
+        run: |
+          curl -L --fail --retry 3 "https://at.adobe.com/iaqQ6wXFJ4xLk8T4" -o satellite-map.png
+          test -s satellite-map.png
+
+      - name: Commit satellite map
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add satellite-map.png
+          git commit -m "Add clean satellite map for QR reveal"
+          git push
