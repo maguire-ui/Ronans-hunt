@@ -627,7 +627,11 @@
         mapCard.classList.remove('focus-x');
         void mapCard.offsetWidth;
         mapCard.classList.add('focus-x');
-        setTimeout(() => mapCard.classList.remove('focus-x'), 3050);
+        setTimeout(()=>{
+          mapCard.classList.remove('focus-x');
+          updateScanButton();
+          scanCta.classList.add('show');
+        },3050);
       }
 
 
@@ -721,6 +725,23 @@
         if (value === PASSWORD) unlock();
         else rejectCode();
       }
+
+      scanCta.addEventListener('click',openScanner);
+      scannerClose.addEventListener('click',closeScanner);
+      scannerOverlay.addEventListener('click',(event)=>{if(event.target===scannerOverlay)closeScanner();});
+      qrFile.addEventListener('change',async()=>{
+        const file=qrFile.files&&qrFile.files[0];
+        if(!file||typeof Html5Qrcode==='undefined')return;
+        await stopScanner();
+        if(!qrScanner)qrScanner=new Html5Qrcode('qr-reader');
+        try{
+          const decodedText=await qrScanner.scanFile(file,true);
+          await unlockFromQr(decodedText);
+        }catch(_){
+          scanStatus.className='scan-status error';
+          scanStatus.textContent='I could not read a QR code from that photo.';
+        }finally{qrFile.value='';}
+      });
 
       input.addEventListener('input', () => {
         input.value = input.value.replace(/\D/g, '').slice(0, 6);
