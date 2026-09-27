@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#15221b" />
+  <title>Ronan Hunt — Clue 2</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:#111a15;color:#f5f1e7;font-family:ui-rounded,"SF Pro Rounded","SF Pro Display",system-ui,-apple-system,sans-serif}
+    body{min-height:100dvh;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) 22px max(28px,env(safe-area-inset-bottom));overflow:hidden}
+    .card{width:min(92vw,560px);padding:32px 26px;border:1px solid rgba(255,255,255,.14);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035));box-shadow:0 28px 70px rgba(0,0,0,.28);text-align:center;backdrop-filter:blur(16px)}
+    .eyebrow{margin:0 0 10px;font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#cfc8b7}
+    h1{margin:0;font-size:clamp(44px,11vw,78px);line-height:.95;letter-spacing:-.05em}
+    p{margin:18px auto 0;max-width:390px;font-size:16px;line-height:1.55;color:#d9d4c8}
+    .badge{width:72px;height:72px;margin:0 auto 22px;border-radius:24px;display:grid;place-items:center;background:#efe9dc;color:#162019;font-size:34px;font-weight:900;transform:rotate(-4deg)}
+    .note{margin-top:24px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9e9a90}
+  </style>
+</head>
+<body>
+  <main class="card" id="content" hidden>
+    <div class="badge">2</div>
+    <p class="eyebrow">QR accepted</p>
+    <h1>Clue 2<br>Unlocked</h1>
+    <p>This page is unlocked by the first custom Ronan Hunt QR code. The actual clue, puzzle, photo, or instructions can go here next.</p>
+    <div class="note">Ronan Hunt</div>
+  </main>
+  <script>
+    (() => {
+      const stage = Number(localStorage.getItem('ronanHuntProgress') || '1');
+      if (stage < 2) {
+        location.replace('./');
+        return;
+      }
+      document.getElementById('content').hidden = false;
+    })();
+  </script>
+</body>
+</html>
