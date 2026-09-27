@@ -508,12 +508,23 @@
       const input = document.getElementById('codeInput');
       const shell = document.getElementById('codeShell');
       const message = document.getElementById('message');
+      const scanCta = document.getElementById('scanCta');
+      const scanCtaText = document.getElementById('scanCtaText');
+      const scannerOverlay = document.getElementById('scannerOverlay');
+      const scannerClose = document.getElementById('scannerClose');
+      const scanStatus = document.getElementById('scanStatus');
+      const qrFile = document.getElementById('qrFile');
       const mapCard = document.querySelector('.map-card');
       const mapImage = mapCard.querySelector('img');
       const PASSWORD = '713489';
       const X_IMAGE_X = 0.3415;
       const X_IMAGE_Y = 0.3763;
+      const PROGRESS_KEY = 'ronanHuntProgress';
+      const NEXT_QR = 'RONAN-HUNT|STAGE-2|8D7K-PINE-42M';
       let unlocked = false;
+      let qrScanner = null;
+      let scannerRunning = false;
+      let qrSolved = false;
 
       // Dense, full-screen cloud cover — intentionally no empty center around the title.
       const cloudLayout = [
