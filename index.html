@@ -103,21 +103,36 @@
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
-      transition:
-        opacity 2.5s cubic-bezier(.22,.8,.25,1),
-        transform 2.5s cubic-bezier(.22,.8,.25,1);
     }
 
     .map-old {
       z-index: 1;
       opacity: 0;
       transform: scale(1.012);
+      transition:
+        opacity 2.5s cubic-bezier(.22,.8,.25,1),
+        transform 2.5s cubic-bezier(.22,.8,.25,1);
     }
 
-    .map-new {
+    .map-qr {
       z-index: 2;
       opacity: 0;
-      transform: scale(1.015);
+      transform-origin: 0 0;
+      transform: translate(0, 0) scale(1);
+      transition:
+        opacity 2.5s cubic-bezier(.22,.8,.25,1),
+        transform 2.2s cubic-bezier(.2,.72,.2,1);
+    }
+
+    .map-placeholder {
+      z-index: 3;
+      opacity: 0;
+      object-fit: cover;
+      object-position: center center;
+      transform: scale(1.01);
+      transition:
+        opacity 2.2s cubic-bezier(.22,.8,.25,1),
+        transform 2.2s cubic-bezier(.22,.8,.25,1);
     }
 
     .scene.unlocking .map-old,
@@ -126,12 +141,26 @@
       transform: scale(1);
     }
 
-    .scene.qr-swap .map-old {
+    .scene.qr-map-in .map-old {
       opacity: 0;
-      transform: scale(.985);
+      transform: scale(.99);
     }
 
-    .scene.qr-swap .map-new {
+    .scene.qr-map-in .map-qr {
+      opacity: 1;
+    }
+
+    .scene.qr-map-zoom .map-qr {
+      transform:
+        translate(var(--qr-dx, 0px), var(--qr-dy, 0px))
+        scale(var(--qr-scale, 4.1));
+    }
+
+    .scene.qr-placeholder-in .map-qr {
+      opacity: 0;
+    }
+
+    .scene.qr-placeholder-in .map-placeholder {
       opacity: 1;
       transform: scale(1);
     }
@@ -464,7 +493,8 @@
     <div class="map-stage">
       <div class="map-card">
         <img id="oldMap" class="map-photo map-old" src="./carson-map.png?v=redx3" alt="Illustrated neighborhood scavenger hunt map" />
-        <img id="newMap" class="map-photo map-new" src="./satellite-map.png?v=clean2" alt="Satellite neighborhood scavenger hunt map" />
+        <img id="qrMap" class="map-photo map-qr" src="./qr1-map.png?v=1" alt="Illustrated neighborhood map for the first QR clue" />
+        <img id="placeholderMap" class="map-photo map-placeholder" src="./qr1-placeholder.jpg?v=1" alt="Placeholder close-up scene for the next hunt step" />
       </div>
     </div>
     <div class="tiny-mark" aria-hidden="true">Map unlocked</div>
@@ -531,11 +561,15 @@
       const qrFile = document.getElementById('qrFile');
       const mapCard = document.querySelector('.map-card');
       const oldMap = document.getElementById('oldMap');
-      const newMap = document.getElementById('newMap');
+      const qrMap = document.getElementById('qrMap');
+      const placeholderMap = document.getElementById('placeholderMap');
       const mapImage = oldMap;
       const PASSWORD = '713489';
       const X_IMAGE_X = 0.3415;
       const X_IMAGE_Y = 0.3763;
+      const QR_TARGET_X = 0.155;
+      const QR_TARGET_Y = 0.752;
+      const QR_TARGET_SCALE = 4.1;
       const PROGRESS_KEY = 'ronanHuntProgressV2';
       const NEXT_QR = 'RONAN-HUNT|STAGE-2|8D7K-PINE-42M';
       const params = new URLSearchParams(location.search);
@@ -641,6 +675,56 @@
         mapImage.style.setProperty('--focus-dy', `${dy}px`);
       }
 
+      function prepQrMapZoom() {
+        const r = qrMap.getBoundingClientRect();
+        if (!qrMap.naturalWidth || !qrMap.naturalHeight || !r.width || !r.height) return;
+
+        const imageRatio = qrMap.naturalWidth / qrMap.naturalHeight;
+        const boxRatio = r.width / r.height;
+        let shownWidth;
+        let shownHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (imageRatio > boxRatio) {
+          shownWidth = r.width;
+          shownHeight = r.width / imageRatio;
+          offsetY = (r.height - shownHeight) / 2;
+        } else {
+          shownHeight = r.height;
+          shownWidth = r.height * imageRatio;
+          offsetX = (r.width - shownWidth) / 2;
+        }
+
+        const targetX = offsetX + shownWidth * QR_TARGET_X;
+        const targetY = offsetY + shownHeight * QR_TARGET_Y;
+        const dx = r.width / 2 - targetX * QR_TARGET_SCALE;
+        const dy = r.height / 2 - targetY * QR_TARGET_SCALE;
+
+        qrMap.style.setProperty('--qr-dx', `${dx}px`);
+        qrMap.style.setProperty('--qr-dy', `${dy}px`);
+        qrMap.style.setProperty('--qr-scale', QR_TARGET_SCALE);
+      }
+
+      function runQrSequence() {
+        prepQrMapZoom();
+        scene.classList.remove('qr-map-in', 'qr-map-zoom', 'qr-placeholder-in');
+        void scene.offsetWidth;
+
+        setTimeout(() => {
+          scene.classList.add('qr-map-in');
+        }, 120);
+
+        setTimeout(() => {
+          prepQrMapZoom();
+          scene.classList.add('qr-map-zoom');
+        }, 2700);
+
+        setTimeout(() => {
+          scene.classList.add('qr-placeholder-in');
+        }, 5800);
+      }
+
       function focusOnX() {
         prepXFocus();
         mapCard.classList.remove('focus-x');
@@ -686,9 +770,7 @@
         scannerOverlay.classList.remove('open');
         scannerOverlay.setAttribute('aria-hidden','true');
         scanCta.classList.remove('show');
-        setTimeout(()=>{
-          scene.classList.add('qr-swap');
-        },120);
+        runQrSequence();
       }
       async function openScanner(){
         scannerOverlay.classList.add('open');
@@ -775,17 +857,21 @@
         if (!unlocked) return;
         prepClearAnimation();
         if (mapImage.complete) prepXFocus();
+        if (qrMap.complete) prepQrMapZoom();
       }, { passive: true });
 
       if (mapImage.complete) prepXFocus();
       else mapImage.addEventListener('load', prepXFocus, { once: true });
+
+      if (qrMap.complete) prepQrMapZoom();
+      else qrMap.addEventListener('load', prepQrMapZoom, { once: true });
 
       if (resumeQr1) {
         try { localStorage.setItem(PROGRESS_KEY, '2'); } catch (_) {}
         unlocked = true;
         scene.classList.add('unlocked');
         scanCta.classList.remove('show');
-        setTimeout(() => scene.classList.add('qr-swap'), 300);
+        setTimeout(runQrSequence, 250);
         history.replaceState({}, '', location.pathname);
       }
     })();
