@@ -19,7 +19,7 @@ jobs:
 
       - name: Download current scavenger hunt map
         run: |
-          curl -L --fail --retry 3 "https://at.adobe.com/pEl0fXw4WttjiOOj" -o carson-map.png
+          curl -L --fail --retry 3 "https://at.adobe.com/1OLbZItdziWhLqc9" -o carson-map.png
           test -s carson-map.png
 
       - name: Commit map asset
@@ -27,5 +27,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add carson-map.png
-          git commit -m "Replace map with red X version"
+          git commit -m "Use corrected red X Carson Park map"
           git push
