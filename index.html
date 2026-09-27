@@ -630,6 +630,68 @@
         setTimeout(() => mapCard.classList.remove('focus-x'), 3050);
       }
 
+
+      function currentProgress(){return Number(localStorage.getItem(PROGRESS_KEY)||'1');}
+      function updateScanButton(){
+        if(currentProgress()>=2){
+          scanCtaText.textContent='Continue Hunt';
+          scanCta.setAttribute('aria-label','Continue to clue two');
+        }else{
+          scanCtaText.textContent='Scan Next QR';
+          scanCta.setAttribute('aria-label','Scan the next hunt QR code');
+        }
+      }
+      async function stopScanner(){
+        if(!qrScanner||!scannerRunning)return;
+        try{await qrScanner.stop();}catch(_){}
+        scannerRunning=false;
+      }
+      async function closeScanner(){
+        await stopScanner();
+        scannerOverlay.classList.remove('open');
+        scannerOverlay.setAttribute('aria-hidden','true');
+        scanStatus.className='scan-status';
+        scanStatus.textContent='Point the camera at the Ronan Hunt QR code.';
+      }
+      async function unlockFromQr(decodedText){
+        if(qrSolved)return;
+        if((decodedText||'').trim()!==NEXT_QR){
+          scanStatus.className='scan-status error';
+          scanStatus.textContent='That is not the next Ronan Hunt code.';
+          return;
+        }
+        qrSolved=true;
+        await stopScanner();
+        localStorage.setItem(PROGRESS_KEY,'2');
+        updateScanButton();
+        scanStatus.className='scan-status success';
+        scanStatus.textContent='Code accepted — clue 2 unlocked.';
+        setTimeout(()=>{location.href='./clue-2.html';},700);
+      }
+      async function openScanner(){
+        if(currentProgress()>=2){location.href='./clue-2.html';return;}
+        scannerOverlay.classList.add('open');
+        scannerOverlay.setAttribute('aria-hidden','false');
+        scanStatus.className='scan-status';
+        scanStatus.textContent='Allow camera access, then point it at the hunt QR code.';
+        qrSolved=false;
+        if(typeof Html5Qrcode==='undefined'){
+          scanStatus.className='scan-status error';
+          scanStatus.textContent='The QR scanner did not load. Refresh and try again.';
+          return;
+        }
+        if(!qrScanner)qrScanner=new Html5Qrcode('qr-reader');
+        try{
+          await qrScanner.start({facingMode:'environment'},{fps:12,qrbox:{width:245,height:245},aspectRatio:1},unlockFromQr,()=>{});
+          scannerRunning=true;
+          scanStatus.textContent='Point the camera at the Ronan Hunt QR code.';
+        }catch(_){
+          scannerRunning=false;
+          scanStatus.className='scan-status error';
+          scanStatus.textContent='Camera could not start. You can scan from a photo below.';
+        }
+      }
+
       function rejectCode() {
         shell.classList.remove('shake');
         void shell.offsetWidth;
