@@ -538,6 +538,8 @@
       const X_IMAGE_Y = 0.3763;
       const PROGRESS_KEY = 'ronanHuntProgressV2';
       const NEXT_QR = 'RONAN-HUNT|STAGE-2|8D7K-PINE-42M';
+      const params = new URLSearchParams(location.search);
+      const resumeQr1 = params.get('resume') === 'qr1';
       let unlocked = false;
       let qrScanner = null;
       let scannerRunning = false;
@@ -777,6 +779,15 @@
 
       if (mapImage.complete) prepXFocus();
       else mapImage.addEventListener('load', prepXFocus, { once: true });
+
+      if (resumeQr1) {
+        try { localStorage.setItem(PROGRESS_KEY, '2'); } catch (_) {}
+        unlocked = true;
+        scene.classList.add('unlocked');
+        scanCta.classList.remove('show');
+        setTimeout(() => scene.classList.add('qr-swap'), 300);
+        history.replaceState({}, '', location.pathname);
+      }
     })();
   </script>
 </body>
