@@ -604,10 +604,10 @@
         input.disabled = true;
         prepClearAnimation();
         requestAnimationFrame(() => scene.classList.add('unlocking'));
+        setTimeout(focusOnX, 3000);
         setTimeout(() => {
           scene.classList.remove('unlocking');
           scene.classList.add('unlocked');
-          setTimeout(focusOnX, 100);
         }, 3250);
       }
 
