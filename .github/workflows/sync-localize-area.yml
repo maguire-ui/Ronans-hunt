@@ -1,0 +1,23 @@
+name: Sync localize area photo
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-localize-area.yml'
+permissions:
+  contents: write
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download localize photo
+        run: curl -L --fail --retry 3 "https://at.adobe.com/O2vvo89qo3Fm7723" -o localize-area-01.jpg
+      - name: Commit photo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add localize-area-01.jpg
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Add localize area photo"
+          git push
