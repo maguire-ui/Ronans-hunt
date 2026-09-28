@@ -455,9 +455,22 @@
     .scene.unlocked .login,
     .scene.unlocked .shockwave { display: none; }
 
-    .scan-cta{position:absolute;z-index:9;left:50%;bottom:max(28px,calc(env(safe-area-inset-bottom) + 16px));width:auto;min-width:190px;height:56px;padding:0 22px;transform:translate(-50%,18px) scale(.96);opacity:0;pointer-events:none;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:850;letter-spacing:-.01em;background:#10212d;color:white;box-shadow:0 14px 38px rgba(8,20,28,.28);transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.25,1)}
-    .scan-cta.show{opacity:1;transform:translate(-50%,0) scale(1);pointer-events:auto}
-    .scan-cta svg{width:21px;height:21px}
+    .map-actions{position:absolute;z-index:9;left:50%;bottom:max(28px,calc(env(safe-area-inset-bottom) + 16px));display:flex;gap:10px;width:min(calc(100% - 28px),480px);transform:translate(-50%,18px) scale(.96);opacity:0;pointer-events:none;transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.25,1)}
+    .map-actions.show{opacity:1;transform:translate(-50%,0) scale(1);pointer-events:auto}
+    .hunt-action{height:56px;width:auto;min-width:0;flex:1 1 0;padding:0 16px;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:9px;font-size:14px;font-weight:850;letter-spacing:-.01em;box-shadow:0 14px 38px rgba(8,20,28,.24)}
+    .hunt-action.primary{background:#10212d;color:white}
+    .hunt-action.secondary{background:rgba(244,240,231,.9);color:#10212d;border:1px solid rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+    .hunt-action svg{width:21px;height:21px;flex:0 0 auto}
+    .localize-overlay{position:absolute;inset:0;z-index:24;display:none;background:#0d171c}
+    .localize-overlay.open{display:block}
+    .localize-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;user-select:none;-webkit-user-drag:none}
+    .localize-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12) 0%,transparent 36%,transparent 58%,rgba(0,0,0,.62) 100%);pointer-events:none}
+    .localize-label{position:absolute;z-index:2;top:max(22px,calc(env(safe-area-inset-top) + 10px));left:20px;margin:0;padding:9px 13px;border-radius:14px;background:rgba(10,22,29,.55);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:12px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:white}
+    .localize-actions{position:absolute;z-index:2;left:50%;bottom:max(24px,calc(env(safe-area-inset-bottom) + 14px));transform:translateX(-50%);display:flex;gap:10px;width:min(calc(100% - 28px),480px)}
+    .localize-actions button{height:56px;width:auto;min-width:0;flex:1 1 0;padding:0 15px;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:850}
+    .localize-return{background:rgba(244,240,231,.9);color:#10212d;border:1px solid rgba(255,255,255,.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+    .localize-scan{background:#10212d;color:white}
+    .localize-actions svg{width:20px;height:20px}
     .scanner-overlay{position:absolute;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center;padding:18px 16px max(16px,env(safe-area-inset-bottom));background:rgba(7,16,22,.68);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
     .scanner-overlay.open{display:flex}
     .scanner-sheet{width:min(100%,520px);max-height:min(88dvh,720px);overflow:auto;border-radius:28px;padding:18px;background:#f4f0e7;color:#10212d;box-shadow:0 28px 90px rgba(0,0,0,.38)}
@@ -514,10 +527,31 @@
     </div>
     <div class="tiny-mark" aria-hidden="true">Map unlocked</div>
 
-    <button class="scan-cta" id="scanCta" type="button" aria-label="Scan the next hunt QR code">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 8h3v3H8V8Zm5 0h3v3h-3V8Zm-5 5h3v3H8v-3Zm5 0h1.5v1.5H13V13Zm2 2h1v1h-1v-1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span id="scanCtaText">Scan Next QR</span>
-    </button>
+    <div class="map-actions" id="mapActions">
+      <button class="hunt-action secondary" id="localizeCta" type="button" aria-label="Localize the hunt area">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s6-5.33 6-11A6 6 0 1 0 6 10c0 5.67 6 11 6 11Z" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.9"/></svg>
+        <span>Localize Area</span>
+      </button>
+      <button class="hunt-action primary" id="scanCta" type="button" aria-label="Scan the next hunt QR code">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 8h3v3H8V8Zm5 0h3v3h-3V8Zm-5 5h3v3H8v-3Zm5 0h1.5v1.5H13V13Zm2 2h1v1h-1v-1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="scanCtaText">Scan QR Code</span>
+      </button>
+    </div>
+    <section class="localize-overlay" id="localizeOverlay" aria-hidden="true" aria-label="Localized hunt area photo">
+      <img class="localize-photo" src="./localize-area-01.jpg?v=1" alt="Closer view of the hunt area with a paved path and trees" />
+      <div class="localize-shade" aria-hidden="true"></div>
+      <p class="localize-label">Localize Area</p>
+      <div class="localize-actions">
+        <button class="localize-return" id="returnMap" type="button" aria-label="Return to the map">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Return to Map</span>
+        </button>
+        <button class="localize-scan" id="localizeScan" type="button" aria-label="Scan the hunt QR code">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 8h3v3H8V8Zm5 0h3v3h-3V8Zm-5 5h3v3H8v-3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Scan QR Code</span>
+        </button>
+      </div>
+    </section>
     <div class="scanner-overlay" id="scannerOverlay" aria-hidden="true">
       <section class="scanner-sheet" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
         <div class="scanner-head"><h2 class="scanner-title" id="scannerTitle">Scan hunt code</h2><button class="scanner-close" id="scannerClose" type="button" aria-label="Close scanner">×</button></div>
@@ -568,8 +602,13 @@
       const input = document.getElementById('codeInput');
       const shell = document.getElementById('codeShell');
       const message = document.getElementById('message');
+      const mapActions = document.getElementById('mapActions');
+      const localizeCta = document.getElementById('localizeCta');
       const scanCta = document.getElementById('scanCta');
       const scanCtaText = document.getElementById('scanCtaText');
+      const localizeOverlay = document.getElementById('localizeOverlay');
+      const returnMap = document.getElementById('returnMap');
+      const localizeScan = document.getElementById('localizeScan');
       const scannerOverlay = document.getElementById('scannerOverlay');
       const scannerClose = document.getElementById('scannerClose');
       const scanStatus = document.getElementById('scanStatus');
@@ -748,14 +787,14 @@
         setTimeout(()=>{
           mapCard.classList.remove('focus-x');
           updateScanButton();
-          scanCta.classList.add('show');
+          mapActions.classList.add('show');
         },3050);
       }
 
 
       function currentProgress(){return Number(localStorage.getItem(PROGRESS_KEY)||'1');}
       function updateScanButton(){
-        scanCtaText.textContent='Scan Next QR';
+        scanCtaText.textContent='Scan QR Code';
         scanCta.setAttribute('aria-label','Scan the next hunt QR code');
       }
       async function stopScanner(){
@@ -784,7 +823,7 @@
         scanStatus.textContent='Code accepted — map unlocked.';
         scannerOverlay.classList.remove('open');
         scannerOverlay.setAttribute('aria-hidden','true');
-        scanCta.classList.remove('show');
+        mapActions.classList.remove('show');
         runQrSequence();
       }
       async function openScanner(){
@@ -841,6 +880,21 @@
       }
 
       scanCta.addEventListener('click',openScanner);
+      localizeCta.addEventListener('click',()=>{
+        localizeOverlay.classList.add('open');
+        localizeOverlay.setAttribute('aria-hidden','false');
+        mapActions.classList.remove('show');
+      });
+      returnMap.addEventListener('click',()=>{
+        localizeOverlay.classList.remove('open');
+        localizeOverlay.setAttribute('aria-hidden','true');
+        mapActions.classList.add('show');
+      });
+      localizeScan.addEventListener('click',()=>{
+        localizeOverlay.classList.remove('open');
+        localizeOverlay.setAttribute('aria-hidden','true');
+        openScanner();
+      });
       scannerClose.addEventListener('click',closeScanner);
       scannerOverlay.addEventListener('click',(event)=>{if(event.target===scannerOverlay)closeScanner();});
       qrFile.addEventListener('change',async()=>{
@@ -885,7 +939,7 @@
         try { localStorage.setItem(PROGRESS_KEY, '2'); } catch (_) {}
         unlocked = true;
         scene.classList.add('unlocked');
-        scanCta.classList.remove('show');
+        mapActions.classList.remove('show');
         setTimeout(runQrSequence, 250);
         history.replaceState({}, '', location.pathname);
       }
