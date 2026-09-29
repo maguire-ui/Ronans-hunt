@@ -1,0 +1,3 @@
+qr01_expected_matrix_match=True
+tmp-old-qr01.svg	RONAN-HUNT|STAGE-2|8D7K-PINE-42M
+tmp-old-qr02.svg	
