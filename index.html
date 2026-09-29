@@ -982,6 +982,65 @@
     .coordinate-use[hidden]{display:none}
     .coordinate-need{margin:0;font-size:12px;font-weight:850;color:#8a2019}
 
+    .coin-found-page{
+      position:absolute;
+      inset:0;
+      z-index:41;
+      display:none;
+      overflow:hidden;
+      background:#0b1518;
+      color:white;
+      opacity:0;
+      transition:opacity .6s ease;
+    }
+    .coin-found-page.open{
+      display:block;
+      opacity:1;
+      animation:rewardFade .35s ease both;
+    }
+    .coin-found-page.leaving{opacity:0}
+    .coin-found-image{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center center;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+    .coin-found-shade{
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg,rgba(3,10,12,.08) 0%,rgba(3,10,12,.14) 46%,rgba(3,10,12,.86) 100%);
+    }
+    .coin-found-copy{
+      position:absolute;
+      z-index:2;
+      left:50%;
+      bottom:max(38px,calc(env(safe-area-inset-bottom) + 24px));
+      transform:translateX(-50%);
+      width:min(calc(100% - 36px),560px);
+      text-align:center;
+    }
+    .coin-found-kicker{
+      margin:0 0 8px;
+      font-size:11px;
+      line-height:1;
+      font-weight:950;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.72);
+    }
+    .coin-found-title{
+      margin:0;
+      font-size:clamp(29px,7.5vw,46px);
+      line-height:1.02;
+      font-weight:950;
+      letter-spacing:-.045em;
+      text-shadow:0 5px 28px rgba(0,0,0,.55);
+    }
+
     .route-page{
       position:absolute;
       inset:0;
@@ -1538,6 +1597,15 @@
       </div>
     </section>
 
+    <section class="coin-found-page" id="coinFoundPage" aria-hidden="true" aria-label="Fourth coin found">
+      <img class="coin-found-image" src="./coin-four-found.jpg?v=1" alt="Photo clue showing the location of the fourth coin" />
+      <div class="coin-found-shade" aria-hidden="true"></div>
+      <div class="coin-found-copy">
+        <p class="coin-found-kicker">Fourth Coin</p>
+        <p class="coin-found-title">The fourth coin has been found. Now you just need to get it.</p>
+      </div>
+    </section>
+
     <section class="route-page" id="routePage" aria-hidden="true" aria-label="Directions to the key">
       <div id="routeMap" class="route-map"></div>
       <div class="route-topbar">
@@ -1782,6 +1850,7 @@
       const coordinateCopy = document.getElementById('coordinateCopy');
       const coordinateUse = document.getElementById('coordinateUse');
       const coordinateNeed = document.getElementById('coordinateNeed');
+      const coinFoundPage = document.getElementById('coinFoundPage');
       const routePage = document.getElementById('routePage');
       const routeMapEl = document.getElementById('routeMap');
       const routeClose = document.getElementById('routeClose');
@@ -2867,9 +2936,24 @@
       function openRoutePage(){
         coordinateOverlay.classList.remove('open');
         coordinateOverlay.setAttribute('aria-hidden','true');
+        coinFoundPage.classList.remove('open','leaving');
+        coinFoundPage.setAttribute('aria-hidden','true');
         routePage.classList.add('open');
         routePage.setAttribute('aria-hidden','false');
         setTimeout(beginLiveNavigation,80);
+      }
+
+      function showFourthCoinFound(){
+        coordinateOverlay.classList.remove('open');
+        coordinateOverlay.setAttribute('aria-hidden','true');
+        coinFoundPage.classList.remove('leaving');
+        coinFoundPage.classList.add('open');
+        coinFoundPage.setAttribute('aria-hidden','false');
+
+        setTimeout(()=>{
+          coinFoundPage.classList.add('leaving');
+          setTimeout(openRoutePage,620);
+        },2400);
       }
 
       function closeRoutePage(){
@@ -2984,10 +3068,10 @@
         syncCoordinateChips();
         coordinateTitle.textContent='Coordinates Descrambled';
         coordinateDisplay.textContent='53.54386° N, 113.28609° W';
-        coordinateCopy.textContent='Coordinates decoded. Opening a live route to the location…';
+        coordinateCopy.textContent='Coordinates decoded.';
         coordinateUse.hidden=true;
         coordinateNeed.hidden=true;
-        setTimeout(openRoutePage,850);
+        setTimeout(showFourthCoinFound,500);
       });
 
       routeClose.addEventListener('click',closeRoutePage);
