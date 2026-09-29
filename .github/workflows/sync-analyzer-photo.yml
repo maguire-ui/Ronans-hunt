@@ -1,4 +1,4 @@
-name: Sync analyzer clue photo
+name: Sync analyzer clue photos
 on:
   push:
     branches: [main]
@@ -12,15 +12,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download analyzer clue photo
+      - name: Download analyzer clue photos
         run: |
           curl -L --fail --retry 3 "https://at.adobe.com/Be4O5zSYNPoHRNks" -o analyzer-photo-01.jpg
+          curl -L --fail --retry 3 "https://at.adobe.com/aG915kVY0WJzgPP4" -o analyzer-photo-02.jpg
+          curl -L --fail --retry 3 "https://at.adobe.com/2tuJqjMGdzc5skwi" -o analyzer-photo-03.jpg
+          curl -L --fail --retry 3 "https://at.adobe.com/uHaaUeOahDbfsIi5" -o analyzer-photo-04.jpg
+          curl -L --fail --retry 3 "https://at.adobe.com/WAA1nbBReBWvDm9U" -o analyzer-photo-05.jpg
+          curl -L --fail --retry 3 "https://at.adobe.com/H2dBZofOjUN1v8sn" -o analyzer-photo-06.jpg
           test -s analyzer-photo-01.jpg
-      - name: Commit photo
+          test -s analyzer-photo-02.jpg
+          test -s analyzer-photo-03.jpg
+          test -s analyzer-photo-04.jpg
+          test -s analyzer-photo-05.jpg
+          test -s analyzer-photo-06.jpg
+      - name: Commit photos
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add analyzer-photo-01.jpg
+          git add analyzer-photo-01.jpg analyzer-photo-02.jpg analyzer-photo-03.jpg analyzer-photo-04.jpg analyzer-photo-05.jpg analyzer-photo-06.jpg
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Add first analyzer clue photo"
+          git commit -m "Add analyzer photo collage"
           git push
