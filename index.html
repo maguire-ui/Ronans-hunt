@@ -1345,10 +1345,10 @@
       let inventoryItems = [];
 
       function loadInventory(){
-        try{
-          const saved=JSON.parse(localStorage.getItem(INVENTORY_KEY)||'[]');
-          inventoryItems=Array.isArray(saved)?saved:[];
-        }catch(_){inventoryItems=[];}
+        // Every page load starts a fresh playthrough inventory.
+        // Items can still be added and used normally until the page is refreshed.
+        inventoryItems=[];
+        try{localStorage.removeItem(INVENTORY_KEY);}catch(_){}
         renderInventory();
       }
 
