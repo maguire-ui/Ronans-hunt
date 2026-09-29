@@ -94,9 +94,18 @@
       display: grid;
       place-items: center;
       overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .45s ease;
       background:
         radial-gradient(circle at 50% 35%, rgba(255,255,255,.5), transparent 32%),
         linear-gradient(180deg, #e3e4cf 0%, #cfd5b7 100%);
+    }
+    .scene.hunt-started .map-stage {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
 
     .map-card {
@@ -531,8 +540,8 @@
       display:flex;
       flex-direction:column;
       align-items:center;
-      justify-content:space-between;
-      padding:max(42px,calc(env(safe-area-inset-top) + 24px)) 22px max(24px,calc(env(safe-area-inset-bottom) + 18px));
+      justify-content:flex-start;
+      padding:max(34px,calc(env(safe-area-inset-top) + 18px)) 18px max(20px,calc(env(safe-area-inset-bottom) + 14px));
       text-align:center;
     }
     .hunt-intro-copy{width:min(100%,520px)}
@@ -541,19 +550,36 @@
     .hunt-intro p.intro-copy{margin:18px auto 0;max-width:440px;font-size:16px;line-height:1.5;font-weight:690;color:rgba(16,33,45,.78)}
     .coin-row{display:flex;justify-content:center;gap:10px;margin-top:20px}
     .coin-dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#f2cf63,#b97a17);border:2px solid rgba(255,255,255,.72);box-shadow:0 4px 10px rgba(63,50,18,.18);font-size:12px;font-weight:950;color:#6c4308}
-    .intro-bottom{width:min(100%,440px);display:flex;flex-direction:column;align-items:center;gap:13px}
+    .intro-bottom{
+      width:min(100%,560px);
+      flex:1 1 auto;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-end;
+      gap:10px;
+      padding-top:8px;
+    }
     .intro-chest{
-      width:min(64vw,250px);
+      width:min(92vw,520px);
+      max-height:46vh;
       height:auto;
       padding:0;
       border:0;
-      border-radius:24px;
+      border-radius:28px;
       background:transparent;
       box-shadow:none;
       cursor:pointer;
       display:block;
-      flex:none;
+      flex:0 1 auto;
       touch-action:manipulation;
+    }
+    .intro-chest svg{
+      width:100%;
+      height:auto;
+      max-height:46vh;
+      display:block;
     }
     .intro-chest:active{transform:scale(.96)}
     .intro-chest.denied{animation:chestBump .42s cubic-bezier(.36,.07,.19,.97)}
@@ -1421,8 +1447,9 @@
         setTimeout(()=>{
           huntIntro.classList.remove('show','leaving');
           huntIntro.setAttribute('aria-hidden','true');
+          scene.classList.add('hunt-started');
           topTools.classList.add('show');
-          focusOnX();
+          requestAnimationFrame(()=>focusOnX());
         },420);
       });
 
@@ -1487,7 +1514,7 @@
         try { localStorage.setItem(PROGRESS_KEY, '2'); } catch (_) {}
         activeClue = 2;
         unlocked = true;
-        scene.classList.add('unlocked');
+        scene.classList.add('unlocked','hunt-started');
         topTools.classList.add('show');
         mapActions.classList.remove('show');
         setTimeout(runQrSequence, 250);
