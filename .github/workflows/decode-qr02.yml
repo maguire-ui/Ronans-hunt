@@ -1,0 +1,32 @@
+name: Decode QR02
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/decode-qr02.yml"
+permissions:
+  contents: write
+jobs:
+  decode:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install QR tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq librsvg2-bin zbar-tools
+      - name: Decode QR02
+        run: |
+          rsvg-convert -w 1220 -h 1400 hunt-qr-02.svg -o qr02.png
+          zbarimg --raw qr02.png | head -n 1 > qr02-token.txt
+          echo "Decoded token:"
+          cat qr02-token.txt
+          test -s qr02-token.txt
+      - name: Commit decoded token
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add qr02-token.txt
+          git commit -m "Decode QR02 token"
+          git push
