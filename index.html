@@ -1643,85 +1643,282 @@
         }
       }
 
-      function legacyQr2Expected(row,col,rotation){
-        const n=LEGACY_QR2_MATRIX.length;
-        let r=row,c=col;
-        if(rotation===1){r=n-1-col;c=row;}
-        else if(rotation===2){r=n-1-row;c=n-1-col;}
-        else if(rotation===3){r=col;c=n-1-row;}
-        return LEGACY_QR2_MATRIX[r][c]==='1';
+      function legacyQr2Expected(row,col){
+        return !!LEGACY_QR2_MATRIX[row] && LEGACY_QR2_MATRIX[row][col]==='1';
+      }
+
+      function legacyQr2RatioOk(runs){
+        const total=runs[0]+runs[1]+runs[2]+runs[3]+runs[4];
+        if(total<14)return false;
+        const unit=total/7;
+        const tol=unit*.82;
+        return (
+          Math.abs(runs[0]-unit)<tol &&
+          Math.abs(runs[1]-unit)<tol &&
+          Math.abs(runs[2]-3*unit)<3*tol &&
+          Math.abs(runs[3]-unit)<tol &&
+          Math.abs(runs[4]-unit)<tol
+        );
+      }
+
+      function legacyQr2Otsu(gray){
+        const hist=new Uint32Array(256);
+        for(let i=0;i<gray.length;i++)hist[gray[i]]++;
+        let total=gray.length,sum=0;
+        for(let i=0;i<256;i++)sum+=i*hist[i];
+
+        let sumB=0,wB=0,maxVariance=-1,threshold=128;
+        for(let t=0;t<256;t++){
+          wB+=hist[t];
+          if(!wB)continue;
+          const wF=total-wB;
+          if(!wF)break;
+          sumB+=t*hist[t];
+          const mB=sumB/wB;
+          const mF=(sum-sumB)/wF;
+          const diff=mB-mF;
+          const variance=wB*wF*diff*diff;
+          if(variance>maxVariance){
+            maxVariance=variance;
+            threshold=t;
+          }
+        }
+        return threshold;
+      }
+
+      function legacyQr2Finders(gray,binary,size){
+        const verticalPattern=(x,y)=>{
+          if(x<0||x>=size||y<0||y>=size||!binary[y*size+x])return null;
+
+          let y0=y;
+          while(y0>=0&&binary[y0*size+x])y0--;
+          let y1=y+1;
+          while(y1<size&&binary[y1*size+x])y1++;
+
+          const center=y1-y0-1;
+          const centerY=((y0+1)+(y1-1))/2;
+
+          let a=y0;
+          while(a>=0&&!binary[a*size+x])a--;
+          const whiteUp=y0-a;
+
+          let b=a;
+          while(b>=0&&binary[b*size+x])b--;
+          const blackUp=a-b;
+
+          let a2=y1;
+          while(a2<size&&!binary[a2*size+x])a2++;
+          const whiteDown=a2-y1;
+
+          let b2=a2;
+          while(b2<size&&binary[b2*size+x])b2++;
+          const blackDown=b2-a2;
+
+          const runs=[blackUp,whiteUp,center,whiteDown,blackDown];
+          return legacyQr2RatioOk(runs)?{runs,centerY}:null;
+        };
+
+        const candidates=[];
+        for(let y=0;y<size;y+=2){
+          const runs=[];
+          let color=!!binary[y*size];
+          let runStart=0;
+
+          for(let x=1;x<size;x++){
+            const next=!!binary[y*size+x];
+            if(next!==color){
+              runs.push({black:color,start:runStart,len:x-runStart});
+              color=next;
+              runStart=x;
+            }
+          }
+          runs.push({black:color,start:runStart,len:size-runStart});
+
+          for(let i=0;i<=runs.length-5;i++){
+            const s=runs.slice(i,i+5);
+            if(!(s[0].black&&!s[1].black&&s[2].black&&!s[3].black&&s[4].black))continue;
+            const lens=s.map(v=>v.len);
+            if(!legacyQr2RatioOk(lens))continue;
+
+            const centerX=s[2].start+s[2].len/2;
+            const ix=Math.max(0,Math.min(size-1,Math.round(centerX)));
+            const vertical=verticalPattern(ix,y);
+            if(!vertical)continue;
+
+            candidates.push({
+              x:centerX,
+              y:vertical.centerY,
+              module:(lens[0]+lens[1]+lens[2]+lens[3]+lens[4])/7
+            });
+          }
+        }
+
+        const clusters=[];
+        for(const candidate of candidates){
+          let chosen=null;
+          let chosenDist=Infinity;
+
+          for(const cluster of clusters){
+            const cx=cluster.sumX/cluster.count;
+            const cy=cluster.sumY/cluster.count;
+            const dx=candidate.x-cx;
+            const dy=candidate.y-cy;
+            const radius=Math.max(candidate.module,cluster.sumModule/cluster.count)*3.1;
+            const dist=dx*dx+dy*dy;
+            if(dist<radius*radius&&dist<chosenDist){
+              chosen=cluster;
+              chosenDist=dist;
+            }
+          }
+
+          if(chosen){
+            chosen.sumX+=candidate.x;
+            chosen.sumY+=candidate.y;
+            chosen.sumModule+=candidate.module;
+            chosen.count++;
+          }else{
+            clusters.push({
+              sumX:candidate.x,
+              sumY:candidate.y,
+              sumModule:candidate.module,
+              count:1
+            });
+          }
+        }
+
+        return clusters
+          .map(c=>({
+            x:c.sumX/c.count,
+            y:c.sumY/c.count,
+            module:c.sumModule/c.count,
+            count:c.count
+          }))
+          .filter(c=>c.count>=2)
+          .sort((a,b)=>b.count-a.count)
+          .slice(0,14);
+      }
+
+      function legacyQr2MatrixScore(gray,size,A,B,C){
+        const exX=(B.x-A.x)/22;
+        const exY=(B.y-A.y)/22;
+        const eyX=(C.x-A.x)/22;
+        const eyY=(C.y-A.y)/22;
+
+        const values=[];
+        let blackSum=0,blackCount=0,whiteSum=0,whiteCount=0;
+
+        const sample=(x,y)=>{
+          x=Math.max(0,Math.min(size-1,Math.round(x)));
+          y=Math.max(0,Math.min(size-1,Math.round(y)));
+          return gray[y*size+x];
+        };
+
+        for(let r=4;r<=32;r++){
+          for(let c=4;c<=32;c++){
+            const x=A.x+(c-7)*exX+(r-7)*eyX;
+            const y=A.y+(c-7)*exY+(r-7)*eyY;
+            if(x<2||y<2||x>=size-2||y>=size-2)return null;
+
+            const g=(
+              sample(x,y)+
+              sample(x+exX*.16,y+exY*.16)+
+              sample(x-exX*.16,y-exY*.16)+
+              sample(x+eyX*.16,y+eyY*.16)+
+              sample(x-eyX*.16,y-eyY*.16)
+            )/5;
+
+            const expectedBlack=legacyQr2Expected(r,c);
+            values.push([expectedBlack,g]);
+            if(expectedBlack){
+              blackSum+=g;
+              blackCount++;
+            }else{
+              whiteSum+=g;
+              whiteCount++;
+            }
+          }
+        }
+
+        const blackMean=blackSum/Math.max(1,blackCount);
+        const whiteMean=whiteSum/Math.max(1,whiteCount);
+        const contrast=whiteMean-blackMean;
+        if(contrast<38)return null;
+
+        const threshold=(blackMean+whiteMean)/2;
+        let errors=0;
+        for(const [expectedBlack,g] of values){
+          if((g<threshold)!==expectedBlack)errors++;
+        }
+        return {
+          accuracy:1-errors/values.length,
+          contrast
+        };
       }
 
       function legacyQr2FrameMatches(video){
         if(!video||video.readyState<2||!video.videoWidth||!video.videoHeight)return false;
 
+        const size=240;
         if(!legacyQr2Canvas){
           legacyQr2Canvas=document.createElement('canvas');
-          legacyQr2Canvas.width=240;
-          legacyQr2Canvas.height=240;
+          legacyQr2Canvas.width=size;
+          legacyQr2Canvas.height=size;
         }
         const canvas=legacyQr2Canvas;
         const ctx=canvas.getContext('2d',{willReadFrequently:true});
         if(!ctx)return false;
 
-        const vw=video.videoWidth,vh=video.videoHeight;
+        const vw=video.videoWidth;
+        const vh=video.videoHeight;
         const sourceSide=Math.min(vw,vh);
         const sx=(vw-sourceSide)/2;
         const sy=(vh-sourceSide)/2;
-        ctx.drawImage(video,sx,sy,sourceSide,sourceSide,0,0,240,240);
+        ctx.drawImage(video,sx,sy,sourceSide,sourceSide,0,0,size,size);
 
-        const image=ctx.getImageData(0,0,240,240).data;
-        const gray=(x,y)=>{
-          x=Math.max(0,Math.min(239,Math.round(x)));
-          y=Math.max(0,Math.min(239,Math.round(y)));
-          const i=(y*240+x)*4;
-          return image[i]*.299+image[i+1]*.587+image[i+2]*.114;
-        };
+        const rgba=ctx.getImageData(0,0,size,size).data;
+        const gray=new Uint8Array(size*size);
+        for(let i=0,p=0;i<rgba.length;i+=4,p++){
+          gray[p]=Math.round(rgba[i]*.299+rgba[i+1]*.587+rgba[i+2]*.114);
+        }
 
-        const n=37;
-        const scales=[.30,.36,.42,.48,.54,.60,.66,.72,.78,.84,.90];
-        const offsets=[-.10,0,.10];
+        const threshold=legacyQr2Otsu(gray);
+        const binary=new Uint8Array(gray.length);
+        for(let i=0;i<gray.length;i++)binary[i]=gray[i]<threshold?1:0;
 
-        for(const scale of scales){
-          const side=240*scale;
-          const cell=side/n;
-          for(const oy of offsets){
-            for(const ox of offsets){
-              const left=120-side/2+ox*side;
-              const top=120-side/2+oy*side;
-              if(left<0||top<0||left+side>240||top+side>240)continue;
+        const finders=legacyQr2Finders(gray,binary,size);
+        if(finders.length<3)return false;
 
-              const samples=[];
-              const points=[];
-              for(let r=0;r<n;r++){
-                for(let c=0;c<n;c++){
-                  // Half the modules is plenty for a unique fingerprint and keeps this light.
-                  if(((r+c)&1)!==0)continue;
-                  const x=left+(c+.5)*cell;
-                  const y=top+(r+.5)*cell;
-                  const g=(gray(x,y)+gray(x-cell*.16,y)+gray(x+cell*.16,y)+gray(x,y-cell*.16)+gray(x,y+cell*.16))/5;
-                  samples.push(g);
-                  points.push([r,c,g]);
-                }
-              }
+        for(let i=0;i<finders.length-2;i++){
+          for(let j=i+1;j<finders.length-1;j++){
+            for(let k=j+1;k<finders.length;k++){
+              const trio=[finders[i],finders[j],finders[k]];
 
-              const sorted=samples.slice().sort((a,b)=>a-b);
-              const low=sorted[Math.floor(sorted.length*.12)];
-              const high=sorted[Math.floor(sorted.length*.88)];
-              if(high-low<72)continue;
-              const threshold=(low+high)/2;
+              for(let corner=0;corner<3;corner++){
+                const A=trio[corner];
+                const others=trio.filter((_,idx)=>idx!==corner);
+                const B=others[0];
+                const C=others[1];
 
-              for(let rotation=0;rotation<4;rotation++){
-                let errors=0;
-                for(const [r,c,g] of points){
-                  const seenBlack=g<threshold;
-                  if(seenBlack!==legacyQr2Expected(r,c,rotation))errors++;
-                }
-                if(errors/points.length<.145)return true;
+                const ux=B.x-A.x,uy=B.y-A.y;
+                const vx=C.x-A.x,vy=C.y-A.y;
+                const lu=Math.hypot(ux,uy);
+                const lv=Math.hypot(vx,vy);
+                if(lu<38||lv<38)continue;
+
+                const rightness=Math.abs((ux*vx+uy*vy)/(lu*lv));
+                const ratio=Math.max(lu,lv)/Math.min(lu,lv);
+                if(rightness>.42||ratio>1.65)continue;
+
+                let score=legacyQr2MatrixScore(gray,size,A,B,C);
+                if(score&&score.accuracy>=.80&&score.contrast>=38)return true;
+
+                score=legacyQr2MatrixScore(gray,size,A,C,B);
+                if(score&&score.accuracy>=.80&&score.contrast>=38)return true;
               }
             }
           }
         }
+
         return false;
       }
 
@@ -1856,7 +2053,9 @@
         }
 
         scanStatus.className='scan-status';
-        scanStatus.textContent='Point the camera at the Ronan Hunt QR code.';
+        scanStatus.textContent=activeClue===2
+          ? 'Point the camera at QR 02 and hold it steady inside the box.'
+          : 'Point the camera at the Ronan Hunt QR code.';
         return true;
       }
 
