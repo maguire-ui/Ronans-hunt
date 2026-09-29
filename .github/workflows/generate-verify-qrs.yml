@@ -1,0 +1,113 @@
+name: Generate and verify hunt QR codes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "qr-tokens.txt"
+      - "hunt-qr-01.svg"
+      - "hunt-qr-02.svg"
+      - "hunt-qr-03.svg"
+      - "hunt-qr-04.svg"
+      - ".github/workflows/generate-verify-qrs.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install QR tooling
+        run: |
+          python -m pip install --quiet qrcode
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq librsvg2-bin zbar-tools
+
+      - name: Generate QR sticker SVGs from canonical tokens
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import html
+          import qrcode
+          from qrcode.constants import ERROR_CORRECT_M
+
+          labels = {
+              "hunt-qr-01.svg": ("Ronan Hunt QR 01", "First Ronan Hunt scavenger hunt code.", "QR 01"),
+              "hunt-qr-02.svg": ("Ronan Hunt QR 02", "Second Ronan Hunt scavenger hunt code, placed at the shed.", "SHED • QR 02"),
+              "hunt-qr-03.svg": ("Ronan Hunt QR 03", "Reserved Ronan Hunt scavenger hunt code 03.", "QR 03"),
+              "hunt-qr-04.svg": ("Ronan Hunt QR 04", "Reserved Ronan Hunt scavenger hunt code 04.", "QR 04"),
+          }
+
+          rows = []
+          for raw in Path("qr-tokens.txt").read_text().splitlines():
+              if not raw.strip():
+                  continue
+              filename, token = raw.split("\t", 1)
+              rows.append((filename.strip(), token.strip()))
+
+          for filename, token in rows:
+              qr = qrcode.QRCode(
+                  version=None,
+                  error_correction=ERROR_CORRECT_M,
+                  box_size=1,
+                  border=4,
+              )
+              qr.add_data(token)
+              qr.make(fit=True)
+              matrix = qr.get_matrix()
+              n = len(matrix)
+
+              path_parts = []
+              for y, row in enumerate(matrix):
+                  for x, dark in enumerate(row):
+                      if dark:
+                          path_parts.append(f"M{x},{y}h1v1h-1z")
+              path_data = "".join(path_parts)
+
+              title, desc, tag = labels[filename]
+              svg = f'''<?xml version="1.0" encoding="UTF-8"?>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 61 70" width="610" height="700" role="img" aria-labelledby="title desc">
+            <title id="title">{html.escape(title)}</title>
+            <desc id="desc">{html.escape(desc)}</desc>
+            <rect width="61" height="70" rx="4" fill="#f6f1e5"/>
+            <rect x="8" y="8" width="45" height="45" rx="2.5" fill="#ffffff"/>
+            <svg x="8" y="8" width="45" height="45" viewBox="0 0 {n} {n}" shape-rendering="crispEdges">
+              <rect width="{n}" height="{n}" fill="#ffffff"/>
+              <path d="{path_data}" fill="#101914"/>
+            </svg>
+            <text x="30.5" y="60.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="3.5" font-weight="700" letter-spacing="0.7" fill="#101914">RONAN HUNT</text>
+            <text x="30.5" y="65" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="2.5" font-weight="700" letter-spacing="0.45" fill="#8a2019">{html.escape(tag)}</text>
+          </svg>
+          '''
+              Path(filename).write_text(svg)
+          PY
+
+      - name: Decode every generated QR and verify payload
+        run: |
+          set -euo pipefail
+          while IFS=$'\t' read -r file expected; do
+            [ -z "$file" ] && continue
+            png="/tmp/${file%.svg}.png"
+            rsvg-convert -w 1220 -h 1400 "$file" -o "$png"
+            decoded="$(zbarimg --quiet -Sqr.enable --raw "$png" | head -n 1)"
+            if [ "$decoded" != "$expected" ]; then
+              echo "::error file=$file::QR payload mismatch. Expected '$expected' but decoded '$decoded'."
+              exit 1
+            fi
+            echo "Verified $file"
+          done < qr-tokens.txt
+
+      - name: Commit repaired/generated QR files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hunt-qr-01.svg hunt-qr-02.svg hunt-qr-03.svg hunt-qr-04.svg
+          if git diff --cached --quiet; then
+            echo "QR files already match canonical generated versions."
+            exit 0
+          fi
+          git commit -m "Regenerate and verify hunt QR codes"
+          git push
