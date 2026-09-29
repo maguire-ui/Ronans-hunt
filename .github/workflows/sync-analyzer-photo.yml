@@ -21,6 +21,7 @@ jobs:
           curl -L --fail --retry 3 "https://at.adobe.com/WAA1nbBReBWvDm9U" -o analyzer-photo-05.jpg
           curl -L --fail --retry 3 "https://at.adobe.com/H2dBZofOjUN1v8sn" -o analyzer-photo-06.jpg
           curl -L --fail --retry 3 "https://at.adobe.com/y23FnigWB4q8PVse" -o chest-reward.png
+          curl -L --fail --retry 3 "https://at.adobe.com/giYeqlq050aUsNet" -o coin-four-found.jpg
           test -s analyzer-photo-01.jpg
           test -s analyzer-photo-02.jpg
           test -s analyzer-photo-03.jpg
@@ -28,11 +29,12 @@ jobs:
           test -s analyzer-photo-05.jpg
           test -s analyzer-photo-06.jpg
           test -s chest-reward.png
+          test -s coin-four-found.jpg
       - name: Commit photos
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add analyzer-photo-01.jpg analyzer-photo-02.jpg analyzer-photo-03.jpg analyzer-photo-04.jpg analyzer-photo-05.jpg analyzer-photo-06.jpg chest-reward.png
+          git add analyzer-photo-01.jpg analyzer-photo-02.jpg analyzer-photo-03.jpg analyzer-photo-04.jpg analyzer-photo-05.jpg analyzer-photo-06.jpg chest-reward.png coin-four-found.jpg
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "Sync hunt image assets"
           git push
