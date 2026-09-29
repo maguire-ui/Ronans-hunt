@@ -15,11 +15,12 @@ jobs:
       - name: Install QR tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq librsvg2-bin zbar-tools
+          sudo apt-get install -y -qq librsvg2-bin zbar-tools imagemagick
       - name: Decode QR02
         run: |
-          rsvg-convert -w 1220 -h 1400 hunt-qr-02.svg -o qr02.png
-          zbarimg --raw qr02.png | head -n 1 > qr02-token.txt
+          rsvg-convert -w 1220 -h 1400 hunt-qr-02.svg -o qr02-full.png
+          convert qr02-full.png -crop 900x900+160+160 +repage -resize 1800x1800 -threshold 55% qr02.png
+          zbarimg -Sqr.enable --raw qr02.png | head -n 1 > qr02-token.txt
           echo "Decoded token:"
           cat qr02-token.txt
           test -s qr02-token.txt
