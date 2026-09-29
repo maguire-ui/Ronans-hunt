@@ -1895,6 +1895,17 @@
         qr2RewardOverlay.setAttribute('aria-hidden','false');
       }
 
+      function showQr3Reward(){
+        unlockInventoryItem({
+          id:'coordinate-descrambler',
+          name:'Coordinate Descrambler',
+          icon:'🧩',
+          description:'A tool that can decode scrambled coordinates connected to the chest.'
+        });
+        qr3RewardOverlay.classList.add('open');
+        qr3RewardOverlay.setAttribute('aria-hidden','false');
+      }
+
       function runQrSequence() {
         activeClue = 2;
         prepQrMapZoom();
@@ -1950,6 +1961,7 @@
       function updateScanButton(){
         scanCtaText.textContent='Scan QR Code';
         scanCta.setAttribute('aria-label','Scan the next hunt QR code');
+        localizeCta.style.display=activeClue>=3?'none':'';
       }
       function stopLegacyQr2Fallback(){
         if(legacyQr2Timer){
@@ -1959,7 +1971,8 @@
       }
 
       function legacyQr2Expected(row,col){
-        return !!LEGACY_QR2_MATRIX[row] && LEGACY_QR2_MATRIX[row][col]==='1';
+        const matrix=activeLegacyMatrix||LEGACY_QR2_MATRIX;
+        return !!matrix[row] && matrix[row][col]==='1';
       }
 
       function legacyQr2RatioOk(runs){
@@ -2239,9 +2252,11 @@
 
       function startLegacyQr2Fallback(){
         stopLegacyQr2Fallback();
-        if(activeClue!==2)return;
+        if(activeClue!==2&&activeClue!==3)return;
+        const stageAtStart=activeClue;
+        activeLegacyMatrix=stageAtStart===3?LEGACY_QR3_MATRIX:LEGACY_QR2_MATRIX;
         legacyQr2Timer=setInterval(()=>{
-          if(qrSolved||activeClue!==2){
+          if(qrSolved||activeClue!==stageAtStart){
             stopLegacyQr2Fallback();
             return;
           }
@@ -2249,7 +2264,7 @@
           try{
             if(legacyQr2FrameMatches(video)){
               stopLegacyQr2Fallback();
-              unlockFromQr('__RONAN_LEGACY_QR02_VISUAL__');
+              unlockFromQr(stageAtStart===3?'__RONAN_LEGACY_QR03_VISUAL__':'__RONAN_LEGACY_QR02_VISUAL__');
             }
           }catch(_){}
         },450);
@@ -2274,21 +2289,20 @@
         // The QR we expect is based on the clue currently on screen, not stale
         // saved progress. This keeps the hunt reliable during reloads and testing.
         const stage=activeClue;
-        const expected=stage===1?QR1_TOKEN:(stage===2?QR2_TOKEN:null);
+        const expected=stage===1?QR1_TOKEN:(stage===2?QR2_TOKEN:(stage===3?QR3_TOKEN:null));
         if(!expected){
           scanStatus.className='scan-status error';
           scanStatus.textContent='The next hunt code is not active yet.';
           return;
         }
         const decoded=(decodedText||'').trim();
-        const legacyQr2Visual=stage===2&&decoded==='__RONAN_LEGACY_QR02_VISUAL__';
-        if(decoded!==expected&&!legacyQr2Visual){
-          if(stage===2){
-            // The original printed QR 02 has a legacy matrix that some QR
-            // decoders can locate but cannot decode. Keep scanning while the
-            // visual fingerprint fallback checks the exact printed pattern.
+        const legacyVisual=
+          (stage===2&&decoded==='__RONAN_LEGACY_QR02_VISUAL__') ||
+          (stage===3&&decoded==='__RONAN_LEGACY_QR03_VISUAL__');
+        if(decoded!==expected&&!legacyVisual){
+          if(stage===2||stage===3){
             scanStatus.className='scan-status';
-            scanStatus.textContent='QR detected — checking QR 02…';
+            scanStatus.textContent=`QR detected — checking QR 0${stage}…`;
           }else{
             scanStatus.className='scan-status error';
             scanStatus.textContent='That is not the QR code for this clue.';
@@ -2316,9 +2330,16 @@
           showQr1Reward();
         }else if(stage===2){
           localStorage.setItem(PROGRESS_KEY,String(Math.max(currentProgress(),3)));
+          activeClue=3;
           scanStatus.className='scan-status success';
           scanStatus.textContent='Code accepted — item unlocked.';
           showQr2Reward();
+        }else if(stage===3){
+          localStorage.setItem(PROGRESS_KEY,String(Math.max(currentProgress(),4)));
+          activeClue=4;
+          scanStatus.className='scan-status success';
+          scanStatus.textContent='Code accepted — item unlocked.';
+          showQr3Reward();
         }
 
         // Shut the camera down after the UI has already advanced.
@@ -2357,7 +2378,7 @@
           ()=>{}
         );
         scannerRunning=true;
-        if(activeClue===2)startLegacyQr2Fallback();
+        if(activeClue===2||activeClue===3)startLegacyQr2Fallback();
 
         // A very fast decode can happen before start() resolves. If it did,
         // immediately stop the now-started camera instead of leaving it hidden.
@@ -2368,8 +2389,8 @@
         }
 
         scanStatus.className='scan-status';
-        scanStatus.textContent=activeClue===2
-          ? 'Point the camera at QR 02 and hold it steady inside the box.'
+        scanStatus.textContent=(activeClue===2||activeClue===3)
+          ? `Point the camera at QR 0${activeClue} and hold it steady inside the box.`
           : 'Point the camera at the Ronan Hunt QR code.';
         return true;
       }
