@@ -1531,6 +1531,23 @@
     }
 
     @media (max-width: 520px) {
+      .clouds::after{
+        content:"";
+        position:absolute;
+        right:-2%;
+        top:56%;
+        width:38%;
+        height:30%;
+        pointer-events:none;
+        background:
+          radial-gradient(ellipse at 38% 28%,rgba(247,250,252,.92) 0 32%,transparent 62%),
+          radial-gradient(ellipse at 78% 58%,rgba(239,245,248,.9) 0 34%,transparent 66%),
+          radial-gradient(ellipse at 34% 82%,rgba(245,249,251,.86) 0 28%,transparent 62%);
+        filter:blur(18px);
+        opacity:.92;
+        transition:opacity .45s ease;
+      }
+      .scene.unlocking .clouds::after{opacity:0}
       .cloud { width: 162px; height: 72px; }
       .cloud::before { width: 80px; height: 80px; left: 22px; top: -34px; }
       .cloud::after { width: 100px; height: 100px; right: 15px; top: -45px; }
@@ -2215,6 +2232,7 @@
         [11,8,1.20,.96,0],[38,8,1.10,.95,1],[69,8,1.18,.96,0],[91,9,1.12,.95,1],
         [14,22,1.18,.97,1],[47,21,1.13,.96,0],[78,23,1.19,.97,1],
         [9,68,1.15,.96,0],[46,68,1.20,.97,1],[80,68,1.16,.96,0],
+        [86,63,1.38,.98,1],[97,66,1.50,.99,0],[84,72,1.42,.99,0],[96,74,1.54,.99,1],[88,79,1.34,.98,0],
         [16,86,1.16,.96,1],[48,85,1.21,.98,0],[82,86,1.17,.96,1]
       ];
 
