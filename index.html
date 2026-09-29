@@ -594,6 +594,139 @@
       40%,60%{transform:translateX(6px)}
     }
 
+    .top-tools{
+      position:absolute;
+      z-index:27;
+      top:max(14px,calc(env(safe-area-inset-top) + 8px));
+      right:max(14px,calc(env(safe-area-inset-right) + 10px));
+      display:flex;
+      gap:8px;
+      opacity:0;
+      transform:translateY(-8px);
+      pointer-events:none;
+      transition:opacity .3s ease,transform .35s cubic-bezier(.2,.85,.22,1);
+    }
+    .top-tools.show{opacity:1;transform:translateY(0);pointer-events:auto}
+    .tool-btn{
+      position:relative;
+      width:48px;
+      height:48px;
+      flex:0 0 48px;
+      border-radius:16px;
+      background:rgba(244,240,231,.9);
+      color:#10212d;
+      border:1px solid rgba(255,255,255,.72);
+      box-shadow:0 10px 26px rgba(8,20,28,.22);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+    }
+    .tool-btn.active{background:#10212d;color:white}
+    .tool-btn svg{width:23px;height:23px}
+    .inventory-count{
+      position:absolute;
+      top:-5px;
+      right:-5px;
+      min-width:19px;
+      height:19px;
+      padding:0 5px;
+      border-radius:999px;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:#a52d22;
+      color:white;
+      border:2px solid #f4f0e7;
+      font-size:10px;
+      font-weight:950;
+      line-height:1;
+    }
+    .inventory-count.show{display:flex}
+
+    .inventory-panel{
+      position:absolute;
+      z-index:29;
+      top:max(72px,calc(env(safe-area-inset-top) + 64px));
+      right:max(14px,calc(env(safe-area-inset-right) + 10px));
+      width:min(330px,calc(100% - 28px));
+      max-height:calc(100% - 100px);
+      overflow:auto;
+      padding:18px;
+      border-radius:24px;
+      background:rgba(244,240,231,.96);
+      color:#10212d;
+      border:1px solid rgba(255,255,255,.78);
+      box-shadow:0 22px 60px rgba(6,17,24,.3);
+      backdrop-filter:blur(22px);
+      -webkit-backdrop-filter:blur(22px);
+      opacity:0;
+      transform:translateY(-10px) scale(.98);
+      pointer-events:none;
+      transition:opacity .22s ease,transform .28s cubic-bezier(.2,.85,.22,1);
+    }
+    .inventory-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+    .inventory-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .inventory-head h3{margin:0;font-size:24px;letter-spacing:-.04em}
+    .inventory-close{width:40px;height:40px;flex:0 0 40px;border-radius:13px;background:rgba(16,33,45,.09);color:#10212d;box-shadow:none;font-size:22px}
+    .inventory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+    .inventory-slot{
+      aspect-ratio:1;
+      border-radius:16px;
+      border:1.5px dashed rgba(16,33,45,.2);
+      background:rgba(255,255,255,.46);
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:6px;
+      overflow:hidden;
+    }
+    .inventory-slot.filled{border-style:solid;background:#fffdf7;box-shadow:0 5px 14px rgba(16,33,45,.08)}
+    .inventory-icon{font-size:26px;line-height:1}
+    .inventory-name{margin-top:4px;font-size:9px;line-height:1.1;font-weight:850;color:rgba(16,33,45,.75)}
+    .inventory-empty{
+      margin:14px 2px 0;
+      text-align:center;
+      font-size:12px;
+      line-height:1.45;
+      font-weight:720;
+      color:rgba(16,33,45,.58);
+    }
+
+    .chest-page{
+      position:absolute;
+      inset:0;
+      z-index:25;
+      display:none;
+      place-items:center;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 50% 42%,rgba(255,255,255,.7),transparent 30%),
+        linear-gradient(180deg,#ecefd9 0%,#d3dbb8 52%,#aebd88 100%);
+    }
+    .chest-page.open{display:grid;animation:introReveal .42s ease both}
+    .chest-page-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;width:min(92vw,560px);padding:90px 20px 30px}
+    .main-chest{
+      width:min(84vw,430px);
+      height:auto;
+      padding:0;
+      border:0;
+      background:transparent;
+      box-shadow:none;
+      flex:none;
+    }
+    .main-chest:active{transform:scale(.97)}
+    .main-chest.denied{animation:chestBump .42s cubic-bezier(.36,.07,.19,.97)}
+    .main-chest-message{
+      min-height:24px;
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+      color:#74251e;
+      opacity:0;
+      transform:translateY(-4px);
+      transition:.22s ease;
+    }
+    .main-chest-message.show{opacity:1;transform:translateY(0)}
+
     .map-actions{position:absolute;z-index:9;left:50%;bottom:max(28px,calc(env(safe-area-inset-bottom) + 16px));display:flex;gap:10px;width:min(calc(100% - 28px),480px);transform:translate(-50%,18px) scale(.96);opacity:0;pointer-events:none;transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.25,1)}
     .map-actions.show{opacity:1;transform:translate(-50%,0) scale(1);pointer-events:auto}
     .hunt-action{height:56px;width:auto;min-width:0;flex:1 1 0;padding:0 16px;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:9px;font-size:14px;font-weight:850;letter-spacing:-.01em;box-shadow:0 14px 38px rgba(8,20,28,.24)}
@@ -721,6 +854,67 @@
       </div>
     </section>
 
+    <nav class="top-tools" id="topTools" aria-label="Hunt tools">
+      <button class="tool-btn" id="inventoryBtn" type="button" aria-label="Open inventory">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M8 7V5.8A3.8 3.8 0 0 1 11.8 2h.4A3.8 3.8 0 0 1 16 5.8V7M5.5 7h13l1.2 13H4.3L5.5 7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M8.7 11h6.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="inventory-count" id="inventoryCount">0</span>
+      </button>
+      <button class="tool-btn" id="chestBtn" type="button" aria-label="Open chest">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 10.5h16v9H4v-9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M5 10.5V8.7C5 5.6 7.5 4 12 4s7 1.6 7 4.7v1.8M4 13h16M9 4.5v15M15 4.5v15" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <rect x="10.2" y="11.3" width="3.6" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </button>
+    </nav>
+
+    <section class="inventory-panel" id="inventoryPanel" aria-hidden="true" aria-label="Inventory">
+      <div class="inventory-head">
+        <h3>Inventory</h3>
+        <button class="inventory-close" id="inventoryClose" type="button" aria-label="Close inventory">×</button>
+      </div>
+      <div class="inventory-grid" id="inventoryGrid"></div>
+      <p class="inventory-empty" id="inventoryEmpty">Items and tools you unlock during the hunt will appear here.</p>
+    </section>
+
+    <section class="chest-page" id="chestPage" aria-hidden="true" aria-label="Locked chest">
+      <div class="chest-page-inner">
+        <button class="main-chest" id="mainChest" type="button" aria-label="Locked treasure chest">
+          <svg viewBox="0 0 320 230" role="img" aria-label="Locked treasure chest illustration">
+            <defs>
+              <linearGradient id="mainWoodTop" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#9c5a26"/>
+                <stop offset="1" stop-color="#6f3717"/>
+              </linearGradient>
+              <linearGradient id="mainWoodBody" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#a66027"/>
+                <stop offset=".55" stop-color="#804119"/>
+                <stop offset="1" stop-color="#673113"/>
+              </linearGradient>
+              <linearGradient id="mainGold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#f6d86c"/>
+                <stop offset=".5" stop-color="#c99020"/>
+                <stop offset="1" stop-color="#8c5a0e"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="160" cy="211" rx="120" ry="13" fill="rgba(20,25,18,.18)"/>
+            <path d="M45 94c0-48 39-72 115-72s115 24 115 72v20H45V94Z" fill="url(#mainWoodTop)" stroke="#4d2713" stroke-width="8"/>
+            <path d="M48 112h224v88c0 9-7 16-16 16H64c-9 0-16-7-16-16v-88Z" fill="url(#mainWoodBody)" stroke="#4d2713" stroke-width="8"/>
+            <path d="M48 119h224M88 31v178M232 31v178" stroke="#d3a13b" stroke-width="12" opacity=".9"/>
+            <rect x="42" y="102" width="236" height="21" rx="5" fill="url(#mainGold)" stroke="#6c470f" stroke-width="4"/>
+            <rect x="133" y="100" width="54" height="68" rx="9" fill="url(#mainGold)" stroke="#6c470f" stroke-width="5"/>
+            <path d="M145 101V84c0-20 30-20 30 0v17" fill="none" stroke="#e7be4c" stroke-width="9" stroke-linecap="round"/>
+            <circle cx="160" cy="130" r="8" fill="#5c3a11"/>
+            <path d="M160 136v15" stroke="#5c3a11" stroke-width="7" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <p class="main-chest-message" id="mainChestMessage" aria-live="polite">Chest is locked.</p>
+      </div>
+    </section>
+
     <div class="map-actions" id="mapActions">
       <button class="hunt-action secondary" id="localizeCta" type="button" aria-label="Localize the hunt area">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s6-5.33 6-11A6 6 0 1 0 6 10c0 5.67 6 11 6 11Z" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.9"/></svg>
@@ -800,6 +994,17 @@
       const introChest = document.getElementById('introChest');
       const chestMessage = document.getElementById('chestMessage');
       const startHunt = document.getElementById('startHunt');
+      const topTools = document.getElementById('topTools');
+      const inventoryBtn = document.getElementById('inventoryBtn');
+      const inventoryCount = document.getElementById('inventoryCount');
+      const inventoryPanel = document.getElementById('inventoryPanel');
+      const inventoryClose = document.getElementById('inventoryClose');
+      const inventoryGrid = document.getElementById('inventoryGrid');
+      const inventoryEmpty = document.getElementById('inventoryEmpty');
+      const chestBtn = document.getElementById('chestBtn');
+      const chestPage = document.getElementById('chestPage');
+      const mainChest = document.getElementById('mainChest');
+      const mainChestMessage = document.getElementById('mainChestMessage');
       const mapActions = document.getElementById('mapActions');
       const localizeCta = document.getElementById('localizeCta');
       const scanCta = document.getElementById('scanCta');
@@ -825,6 +1030,7 @@
       const QR_TARGET_Y = 0.752;
       const QR_TARGET_SCALE = 4.1;
       const PROGRESS_KEY = 'ronanHuntProgressV2';
+      const INVENTORY_KEY = 'ronanHuntInventoryV1';
       const NEXT_QR = 'RONAN-HUNT|STAGE-2|8D7K-PINE-42M';
       const params = new URLSearchParams(location.search);
       const resumeQr1 = params.get('resume') === 'qr1';
@@ -833,6 +1039,61 @@
       let qrScanner = null;
       let scannerRunning = false;
       let qrSolved = false;
+      let inventoryItems = [];
+
+      function loadInventory(){
+        try{
+          const saved=JSON.parse(localStorage.getItem(INVENTORY_KEY)||'[]');
+          inventoryItems=Array.isArray(saved)?saved:[];
+        }catch(_){inventoryItems=[];}
+        renderInventory();
+      }
+
+      function renderInventory(){
+        inventoryGrid.innerHTML='';
+        const visible=inventoryItems.slice(0,8);
+        visible.forEach(item=>{
+          const slot=document.createElement('div');
+          slot.className='inventory-slot filled';
+          const icon=document.createElement('div');
+          icon.className='inventory-icon';
+          icon.textContent=item.icon||'◆';
+          const name=document.createElement('div');
+          name.className='inventory-name';
+          name.textContent=item.name||'Item';
+          slot.append(icon,name);
+          inventoryGrid.appendChild(slot);
+        });
+        for(let i=visible.length;i<8;i++){
+          const slot=document.createElement('div');
+          slot.className='inventory-slot';
+          inventoryGrid.appendChild(slot);
+        }
+        inventoryEmpty.style.display=inventoryItems.length?'none':'block';
+        inventoryCount.textContent=String(inventoryItems.length);
+        inventoryCount.classList.toggle('show',inventoryItems.length>0);
+      }
+
+      function unlockInventoryItem(item){
+        if(!item||!item.id)return false;
+        if(inventoryItems.some(existing=>existing.id===item.id))return false;
+        inventoryItems.push({
+          id:String(item.id),
+          name:String(item.name||'Item'),
+          icon:String(item.icon||'◆'),
+          description:String(item.description||'')
+        });
+        try{localStorage.setItem(INVENTORY_KEY,JSON.stringify(inventoryItems));}catch(_){}
+        renderInventory();
+        return true;
+      }
+
+      window.RonanHuntInventory={
+        unlockItem:unlockInventoryItem,
+        getItems:()=>inventoryItems.map(item=>({...item}))
+      };
+
+      loadInventory();
 
       // Dense, full-screen cloud cover — intentionally no empty center around the title.
       const cloudLayout = [
@@ -1117,6 +1378,37 @@
         }
       }
 
+      inventoryBtn.addEventListener('click',()=>{
+        const opening=!inventoryPanel.classList.contains('open');
+        inventoryPanel.classList.toggle('open',opening);
+        inventoryPanel.setAttribute('aria-hidden',opening?'false':'true');
+        inventoryBtn.classList.toggle('active',opening);
+      });
+
+      inventoryClose.addEventListener('click',()=>{
+        inventoryPanel.classList.remove('open');
+        inventoryPanel.setAttribute('aria-hidden','true');
+        inventoryBtn.classList.remove('active');
+      });
+
+      chestBtn.addEventListener('click',()=>{
+        const opening=!chestPage.classList.contains('open');
+        chestPage.classList.toggle('open',opening);
+        chestPage.setAttribute('aria-hidden',opening?'false':'true');
+        chestBtn.classList.toggle('active',opening);
+        inventoryPanel.classList.remove('open');
+        inventoryPanel.setAttribute('aria-hidden','true');
+        inventoryBtn.classList.remove('active');
+        mainChestMessage.classList.remove('show');
+      });
+
+      mainChest.addEventListener('click',()=>{
+        mainChest.classList.remove('denied');
+        void mainChest.offsetWidth;
+        mainChest.classList.add('denied');
+        mainChestMessage.classList.add('show');
+      });
+
       introChest.addEventListener('click',()=>{
         introChest.classList.remove('denied');
         void introChest.offsetWidth;
@@ -1129,6 +1421,7 @@
         setTimeout(()=>{
           huntIntro.classList.remove('show','leaving');
           huntIntro.setAttribute('aria-hidden','true');
+          topTools.classList.add('show');
           focusOnX();
         },420);
       });
@@ -1195,6 +1488,7 @@
         activeClue = 2;
         unlocked = true;
         scene.classList.add('unlocked');
+        topTools.classList.add('show');
         mapActions.classList.remove('show');
         setTimeout(runQrSequence, 250);
         history.replaceState({}, '', location.pathname);
