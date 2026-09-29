@@ -1,4 +1,4 @@
-name: Sync QR1 scene assets
+name: Sync QR1 shed photo
 
 on:
   push:
@@ -16,17 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download QR1 map and placeholder
+      - name: Download updated shed photo
         run: |
-          curl -L --fail --retry 3 "https://at.adobe.com/t1j2bmteyAH1Wcu8" -o qr1-map.png
-          curl -L --fail --retry 3 "https://at.adobe.com/zjyMFA3xOE2Xttpl" -o qr1-placeholder.jpg
-          test -s qr1-map.png
+          curl -L --fail --retry 3 "https://at.adobe.com/36gIhqwJwED3fbqv" -o qr1-placeholder.jpg
           test -s qr1-placeholder.jpg
 
-      - name: Commit assets
+      - name: Commit updated shed photo
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add qr1-map.png qr1-placeholder.jpg
-          git commit -m "Add QR1 transition images"
+          git add qr1-placeholder.jpg
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Replace shed placeholder photo"
           git push
