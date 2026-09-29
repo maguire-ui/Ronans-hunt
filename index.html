@@ -171,6 +171,48 @@
         scale(var(--qr-scale, 4.1));
     }
 
+    .qr-target-x{
+      position:absolute;
+      z-index:4;
+      left:var(--qr-x,50%);
+      top:var(--qr-y,50%);
+      width:54px;
+      height:54px;
+      opacity:0;
+      transform:translate(-50%,-50%) scale(.6) rotate(-7deg);
+      transition:
+        opacity .32s ease,
+        transform 2.2s cubic-bezier(.2,.72,.2,1),
+        left 2.2s cubic-bezier(.2,.72,.2,1),
+        top 2.2s cubic-bezier(.2,.72,.2,1);
+      pointer-events:none;
+      filter:drop-shadow(0 4px 6px rgba(0,0,0,.28));
+    }
+    .qr-target-x::before,.qr-target-x::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:54px;
+      height:9px;
+      border-radius:999px;
+      background:#e3312b;
+      border:2px solid rgba(255,255,255,.94);
+      box-shadow:0 1px 0 rgba(0,0,0,.14);
+      transform-origin:center;
+    }
+    .qr-target-x::before{transform:translate(-50%,-50%) rotate(45deg)}
+    .qr-target-x::after{transform:translate(-50%,-50%) rotate(-45deg)}
+    .scene.qr-map-x .qr-target-x{
+      opacity:1;
+      transform:translate(-50%,-50%) scale(1) rotate(-7deg);
+    }
+    .scene.qr-map-zoom .qr-target-x{
+      left:var(--qr-zoom-x,var(--qr-x,50%));
+      top:var(--qr-zoom-y,var(--qr-y,50%));
+      transform:translate(-50%,-50%) scale(1.16) rotate(-7deg);
+    }
+
     .scene.qr-placeholder-in .map-qr {
       opacity: 0;
     }
@@ -523,6 +565,7 @@
         <img id="oldMap" class="map-photo map-old" src="./carson-map.png?v=redx3" alt="Illustrated neighborhood scavenger hunt map" />
         <img id="qrMap" class="map-photo map-qr" src="./qr1-map.png?v=1" alt="Illustrated neighborhood map for the first QR clue" />
         <img id="placeholderMap" class="map-photo map-placeholder" src="./qr1-placeholder.jpg?v=1" alt="Placeholder close-up scene for the next hunt step" />
+        <div class="qr-target-x" id="qrTargetX" aria-hidden="true"></div>
       </div>
     </div>
     <div class="tiny-mark" aria-hidden="true">Map unlocked</div>
@@ -538,7 +581,7 @@
       </button>
     </div>
     <section class="localize-overlay" id="localizeOverlay" aria-hidden="true" aria-label="Localized hunt area photo">
-      <img class="localize-photo" src="./localize-area-01.jpg?v=1" alt="Closer view of the hunt area with a paved path and trees" />
+      <img class="localize-photo" id="localizePhoto" src="./localize-area-01.jpg?v=1" alt="Closer view of the hunt area with a paved path and trees" />
       <div class="localize-shade" aria-hidden="true"></div>
       <p class="localize-label">Localize Area</p>
       <div class="localize-actions">
@@ -607,6 +650,7 @@
       const scanCta = document.getElementById('scanCta');
       const scanCtaText = document.getElementById('scanCtaText');
       const localizeOverlay = document.getElementById('localizeOverlay');
+      const localizePhoto = document.getElementById('localizePhoto');
       const returnMap = document.getElementById('returnMap');
       const localizeScan = document.getElementById('localizeScan');
       const scannerOverlay = document.getElementById('scannerOverlay');
@@ -617,6 +661,7 @@
       const oldMap = document.getElementById('oldMap');
       const qrMap = document.getElementById('qrMap');
       const placeholderMap = document.getElementById('placeholderMap');
+      const qrTargetX = document.getElementById('qrTargetX');
       const mapImage = oldMap;
       const PASSWORD = '713489';
       const X_IMAGE_X = 0.3415;
@@ -629,6 +674,7 @@
       const params = new URLSearchParams(location.search);
       const resumeQr1 = params.get('resume') === 'qr1';
       let unlocked = false;
+      let activeClue = 1;
       let qrScanner = null;
       let scannerRunning = false;
       let qrSolved = false;
@@ -758,25 +804,51 @@
         qrMap.style.setProperty('--qr-dx', `${dx}px`);
         qrMap.style.setProperty('--qr-dy', `${dy}px`);
         qrMap.style.setProperty('--qr-scale', QR_TARGET_SCALE);
+
+        const zoomedX = targetX * QR_TARGET_SCALE + dx;
+        const zoomedY = targetY * QR_TARGET_SCALE + dy;
+        qrTargetX.style.setProperty('--qr-x', `${targetX}px`);
+        qrTargetX.style.setProperty('--qr-y', `${targetY}px`);
+        qrTargetX.style.setProperty('--qr-zoom-x', `${zoomedX}px`);
+        qrTargetX.style.setProperty('--qr-zoom-y', `${zoomedY}px`);
       }
 
       function runQrSequence() {
+        activeClue = 2;
         prepQrMapZoom();
-        scene.classList.remove('qr-map-in', 'qr-map-zoom', 'qr-placeholder-in');
+        mapActions.classList.remove('show');
+        localizeOverlay.classList.remove('open');
+        localizeOverlay.setAttribute('aria-hidden','true');
+        scene.classList.remove('qr-map-in', 'qr-map-x', 'qr-map-zoom', 'qr-placeholder-in');
         void scene.offsetWidth;
 
+        // First reveal the full second map, fully zoomed out.
         setTimeout(() => {
           scene.classList.add('qr-map-in');
         }, 120);
 
+        // Mark the exact circled target with a red X.
+        setTimeout(() => {
+          prepQrMapZoom();
+          scene.classList.add('qr-map-x');
+        }, 2450);
+
+        // Smoothly zoom into the X.
         setTimeout(() => {
           prepQrMapZoom();
           scene.classList.add('qr-map-zoom');
-        }, 2700);
+        }, 3300);
 
+        // Smoothly zoom back out, keeping the X visible.
         setTimeout(() => {
-          scene.classList.add('qr-placeholder-in');
-        }, 5800);
+          scene.classList.remove('qr-map-zoom');
+        }, 5350);
+
+        // Once the zoom-out finishes, reveal the clue controls.
+        setTimeout(() => {
+          updateScanButton();
+          mapActions.classList.add('show');
+        }, 7700);
       }
 
       function focusOnX() {
@@ -879,8 +951,19 @@
         else rejectCode();
       }
 
+      function prepareLocalizePhoto(){
+        if(activeClue === 2){
+          localizePhoto.src='./qr1-placeholder.jpg?v=1';
+          localizePhoto.alt='Closer view of the shed area for the second hunt clue';
+        }else{
+          localizePhoto.src='./localize-area-01.jpg?v=1';
+          localizePhoto.alt='Closer view of the hunt area with a paved path and trees';
+        }
+      }
+
       scanCta.addEventListener('click',openScanner);
       localizeCta.addEventListener('click',()=>{
+        prepareLocalizePhoto();
         localizeOverlay.classList.add('open');
         localizeOverlay.setAttribute('aria-hidden','false');
         mapActions.classList.remove('show');
@@ -937,6 +1020,7 @@
 
       if (resumeQr1) {
         try { localStorage.setItem(PROGRESS_KEY, '2'); } catch (_) {}
+        activeClue = 2;
         unlocked = true;
         scene.classList.add('unlocked');
         mapActions.classList.remove('show');
