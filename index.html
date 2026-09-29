@@ -1179,35 +1179,61 @@
       z-index:6;
       left:50%;
       top:50%;
-      width:110px;
-      height:110px;
+      width:108px;
+      height:108px;
       pointer-events:none;
       opacity:0;
-      transform:translate(48vw,18vh) rotate(-35deg) scale(.7);
-      filter:drop-shadow(0 12px 16px rgba(84,50,5,.38));
+      transform:translate(34vw,22vh) rotate(-28deg) scale(.76);
+      filter:drop-shadow(0 10px 14px rgba(84,50,5,.32));
+      transform-origin:50% 50%;
     }
     .golden-key-animation.play{
-      animation:keyIntoLock 1.45s cubic-bezier(.18,.8,.24,1) forwards;
+      animation:keyIntoLock 1.72s cubic-bezier(.2,.82,.22,1) forwards;
     }
-    .golden-key-animation svg{width:100%;height:100%}
+    .golden-key-animation svg{width:100%;height:100%;display:block}
     #mainChestLid{
       transform-box:fill-box;
       transform-origin:50% 100%;
-      transition:transform .52s cubic-bezier(.2,.9,.25,1);
+      transition:transform .62s cubic-bezier(.16,.86,.22,1);
     }
-    .main-chest.opened #mainChestLid{transform:translateY(-28px) rotate(-8deg)}
-    .main-chest.opened{animation:chestOpenPop .55s cubic-bezier(.2,.9,.25,1)}
+    .main-chest.opened #mainChestLid{transform:translateY(-31px) rotate(-7deg)}
+    .main-chest.opened{animation:chestOpenPop .68s cubic-bezier(.18,.88,.24,1)}
     @keyframes keyIntoLock{
-      0%{opacity:0;transform:translate(48vw,18vh) rotate(-35deg) scale(.7)}
-      18%{opacity:1}
-      72%{opacity:1;transform:translate(-10px,4px) rotate(6deg) scale(1)}
-      88%{opacity:1;transform:translate(-10px,4px) rotate(95deg) scale(.92)}
-      100%{opacity:0;transform:translate(-10px,4px) rotate(105deg) scale(.88)}
+      0%{
+        opacity:0;
+        transform:translate(34vw,22vh) rotate(-28deg) scale(.76);
+      }
+      12%{opacity:1}
+      46%{
+        opacity:1;
+        transform:translate(46px,24px) rotate(-8deg) scale(1.02);
+      }
+      64%{
+        opacity:1;
+        transform:translate(-8px,5px) rotate(2deg) scale(1);
+      }
+      73%{
+        opacity:1;
+        transform:translate(-8px,5px) rotate(2deg) scale(.98);
+      }
+      88%{
+        opacity:1;
+        transform:translate(-8px,5px) rotate(88deg) scale(.96);
+      }
+      94%{
+        opacity:1;
+        transform:translate(-8px,5px) rotate(100deg) scale(.94);
+      }
+      100%{
+        opacity:0;
+        transform:translate(-8px,5px) rotate(100deg) scale(.92);
+      }
     }
     @keyframes chestOpenPop{
       0%{transform:scale(1)}
-      45%{transform:scale(1.035)}
-      100%{transform:scale(1)}
+      28%{transform:translateY(1px) scale(.996)}
+      55%{transform:translateY(-2px) scale(1.024)}
+      100%{transform:translateY(0) scale(1)}
     }
 
     .final-reward-page{
@@ -3334,14 +3360,14 @@
 
           setTimeout(()=>{
             mainChest.classList.add('opened');
-          },1180);
+          },1510);
 
           setTimeout(()=>{
             chestPage.classList.remove('open');
             chestPage.setAttribute('aria-hidden','true');
             finalRewardPage.classList.add('open');
             finalRewardPage.setAttribute('aria-hidden','false');
-          },1900);
+          },2250);
           return;
         }
 
