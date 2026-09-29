@@ -259,6 +259,19 @@
       pointer-events: none;
       filter: saturate(.92);
     }
+    .clouds::before{
+      content:"";
+      position:absolute;
+      inset:8%;
+      background:
+        radial-gradient(ellipse at 18% 42%,rgba(245,249,251,.72) 0 14%,transparent 31%),
+        radial-gradient(ellipse at 47% 48%,rgba(244,248,250,.66) 0 16%,transparent 34%),
+        radial-gradient(ellipse at 76% 44%,rgba(245,249,251,.7) 0 14%,transparent 31%);
+      filter:blur(28px);
+      opacity:.72;
+      transition:opacity .5s ease;
+    }
+    .scene.unlocking .clouds::before{opacity:0}
 
     .cloud {
       --scale: 1;
@@ -322,7 +335,7 @@
       display: grid;
       place-items: center;
       padding: max(24px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom));
-      transition: opacity .45s ease, transform .55s cubic-bezier(.2,.9,.25,1), filter .45s ease;
+      transition: opacity .24s ease, transform .34s cubic-bezier(.2,.9,.25,1), filter .24s ease;
     }
 
     .login-inner {
@@ -472,7 +485,7 @@
     }
 
     .scene.unlocking .shockwave {
-      animation: shock 1.6s cubic-bezier(.15,.75,.1,1) forwards;
+      animation: shock .95s cubic-bezier(.15,.75,.1,1) forwards;
     }
 
     @keyframes shock {
@@ -482,7 +495,7 @@
     }
 
     .scene.unlocking .cloud {
-      animation: clearCloud var(--clear-duration, 2150ms) cubic-bezier(.4,0,.2,1) var(--clear-delay, 0ms) forwards !important;
+      animation: clearCloud var(--clear-duration, 820ms) cubic-bezier(.32,.04,.18,1) var(--clear-delay, 0ms) forwards !important;
     }
 
     @keyframes clearCloud {
@@ -518,7 +531,7 @@
         radial-gradient(circle at 50% 14%,rgba(255,255,255,.88),transparent 28%),
         linear-gradient(180deg,#eef0dc 0%,#d8dfbf 48%,#b9c697 100%);
     }
-    .hunt-intro.show{display:block;animation:introReveal .65s cubic-bezier(.2,.85,.22,1) both}
+    .hunt-intro.show{display:block;animation:introReveal .42s cubic-bezier(.2,.85,.22,1) both}
     .hunt-intro.leaving{animation:introLeave .42s ease both;pointer-events:none}
     .hunt-intro::before{
       content:"";
@@ -1287,7 +1300,7 @@
     .hunt-action.primary{background:#10212d;color:white}
     .hunt-action.secondary{background:rgba(244,240,231,.9);color:#10212d;border:1px solid rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
     .hunt-action svg{width:21px;height:21px;flex:0 0 auto}
-    .localize-overlay{position:absolute;inset:0;z-index:24;display:none;background:#0d171c}
+    .localize-overlay{position:absolute;inset:0;z-index:28;display:none;background:#0d171c}
     .localize-overlay.open{display:block}
     .localize-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;user-select:none;-webkit-user-drag:none}
     .localize-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12) 0%,transparent 36%,transparent 58%,rgba(0,0,0,.62) 100%);pointer-events:none}
@@ -1400,12 +1413,118 @@
     }
     .scene.unlocked .tiny-mark { opacity: 1; }
 
+    /* UI polish: safe-area spacing, scroll safety, and overlap prevention */
+    button{touch-action:manipulation}
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible{
+      outline:3px solid rgba(255,255,255,.92);
+      outline-offset:3px;
+    }
+    .inventory-panel,
+    .item-detail-card,
+    .qr-reward-card,
+    .scanner-sheet,
+    .coordinate-card,
+    .route-panel{
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+    }
+    .qr-reward-card,
+    .coordinate-card{
+      max-height:calc(100dvh - max(36px, env(safe-area-inset-top)) - max(36px, env(safe-area-inset-bottom)));
+      overflow:auto;
+    }
+    .route-panel{
+      max-height:min(48dvh,390px);
+      overflow:auto;
+    }
+    .scanner-overlay{
+      padding-top:max(16px,env(safe-area-inset-top));
+    }
+    .scanner-sheet{
+      max-height:calc(100dvh - max(32px, env(safe-area-inset-top)) - max(24px, env(safe-area-inset-bottom)));
+    }
+    .analyzer-clue-close{
+      top:max(12px,calc(env(safe-area-inset-top) + 6px));
+      right:max(12px,calc(env(safe-area-inset-right) + 6px));
+    }
+    .hunt-action span,
+    .localize-actions span,
+    .qr-reward-next span,
+    .route-scan span,
+    .start-hunt span{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .chest-page-inner{
+      min-height:100dvh;
+      max-height:100dvh;
+      overflow:auto;
+      overscroll-behavior:contain;
+      padding-top:max(78px,calc(env(safe-area-inset-top) + 68px));
+      padding-bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px));
+    }
+    .main-chest{flex:0 1 auto}
+    .coin-found-copy{padding-bottom:env(safe-area-inset-bottom)}
+    .final-reward-inner{min-height:100dvh}
+    .route-topbar{
+      padding-left:env(safe-area-inset-left);
+      padding-right:env(safe-area-inset-right);
+    }
+
+    @media (max-height: 720px) {
+      .hunt-intro-inner{
+        padding-top:max(22px,calc(env(safe-area-inset-top) + 10px));
+        padding-bottom:max(14px,calc(env(safe-area-inset-bottom) + 8px));
+      }
+      .hunt-intro h2{font-size:clamp(36px,9.5vw,54px)}
+      .hunt-intro p.intro-copy{margin-top:10px;font-size:14px;line-height:1.35}
+      .coin-row{margin-top:12px}
+      .intro-bottom{gap:6px;padding-top:4px}
+      .intro-chest,.intro-chest svg{max-height:34dvh}
+      .chest-message{font-size:12px;min-height:17px}
+      .coordinate-chip{min-height:44px;padding:7px 11px}
+      .start-hunt{height:52px}
+      .main-chest,.main-chest svg{max-height:56dvh}
+      .analyzer-photo{max-height:50dvh}
+      .final-reward-image{max-height:56dvh}
+    }
+
     @media (max-width: 520px) {
-      .cloud { width: 158px; height: 70px; }
-      .cloud::before { width: 78px; height: 78px; left: 22px; top: -33px; }
-      .cloud::after { width: 98px; height: 98px; right: 15px; top: -44px; }
-      .login-inner { transform: translateY(-3vh); }
-      h1 { margin-bottom: 24px; }
+      .cloud { width: 162px; height: 72px; }
+      .cloud::before { width: 80px; height: 80px; left: 22px; top: -34px; }
+      .cloud::after { width: 100px; height: 100px; right: 15px; top: -45px; }
+      .login-inner { width:min(91vw,420px); transform: translateY(-2vh); }
+      h1 { margin-bottom: 22px; }
+      .top-tools{
+        top:max(10px,calc(env(safe-area-inset-top) + 6px));
+        right:max(10px,calc(env(safe-area-inset-right) + 8px));
+        gap:7px;
+      }
+      .tool-btn{width:46px;height:46px;flex-basis:46px;border-radius:15px}
+      .inventory-panel{
+        top:max(66px,calc(env(safe-area-inset-top) + 58px));
+        right:max(10px,calc(env(safe-area-inset-right) + 8px));
+        width:min(340px,calc(100% - 20px));
+        max-height:calc(100dvh - max(80px,calc(env(safe-area-inset-top) + 70px)) - max(10px,env(safe-area-inset-bottom)));
+      }
+      .map-actions,.localize-actions{width:min(calc(100% - 20px),480px);gap:8px}
+      .hunt-action,.localize-actions button{height:54px;padding:0 11px;font-size:13px;border-radius:18px}
+      .scanner-overlay{padding-left:10px;padding-right:10px}
+      .scanner-sheet{padding:14px;border-radius:24px}
+      #qr-reader{min-height:240px;border-radius:18px}
+      #qr-reader video,#qr-reader canvas{border-radius:18px}
+      .qr-reward-card{padding:22px 16px 16px;border-radius:26px}
+      .qr-reward-card h3{font-size:30px}
+      .route-panel{width:calc(100% - 16px);bottom:max(8px,calc(env(safe-area-inset-bottom) + 4px));border-radius:19px}
+      .route-links{gap:6px}
+      .route-link{font-size:11px}
+      .coin-found-copy{bottom:max(22px,calc(env(safe-area-inset-bottom) + 12px));width:calc(100% - 24px)}
+      .coin-found-title{font-size:clamp(28px,8vw,40px)}
+      .final-reward-inner{padding-left:14px;padding-right:14px}
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2042,7 +2161,9 @@
         [7,43,1.24,.95,0],[23,47,1.42,.98,1],[40,42,1.26,.97,0],[56,46,1.54,.99,1],[73,41,1.34,.96,0],[91,46,1.42,.98,1],
         [0,60,1.44,.98,1],[17,59,1.34,.96,0],[34,63,1.52,.99,1],[51,58,1.32,.97,0],[68,62,1.45,.98,1],[85,58,1.30,.96,0],[101,62,1.46,.99,1],
         [7,76,1.28,.96,0],[24,79,1.46,.99,1],[41,75,1.34,.97,0],[58,80,1.48,.99,1],[75,75,1.34,.96,0],[93,79,1.47,.99,1],
-        [1,94,1.42,.98,1],[18,92,1.25,.95,0],[35,96,1.48,.99,1],[52,91,1.32,.97,0],[70,96,1.42,.98,1],[87,92,1.30,.96,0],[102,96,1.44,.98,1]
+        [1,94,1.42,.98,1],[18,92,1.25,.95,0],[35,96,1.48,.99,1],[52,91,1.32,.97,0],[70,96,1.42,.98,1],[87,92,1.30,.96,0],[102,96,1.44,.98,1],
+        [13,36,1.08,.94,0],[29,38,1.16,.96,1],[45,35,1.04,.95,0],[62,38,1.14,.96,1],[79,35,1.08,.94,0],[95,38,1.12,.96,1],
+        [12,52,1.12,.95,1],[43,53,1.06,.95,0],[77,52,1.13,.96,1],[94,54,1.04,.94,0]
       ];
 
       function seeded(n) {
@@ -2088,8 +2209,8 @@
           const ny = vy / dist;
           const travel = Math.max(rect.width, rect.height) * (0.74 + seeded(index + 130) * .22);
           const normalized = Math.min(1, dist / maxDistance);
-          const delay = Math.round(normalized * 580 + seeded(index + 160) * 90);
-          const duration = Math.round(1900 + seeded(index + 190) * 550);
+          const delay = Math.round(normalized * 135 + seeded(index + 160) * 35);
+          const duration = Math.round(720 + seeded(index + 190) * 210);
 
           cloud.style.setProperty('--dx', `${nx * travel}px`);
           cloud.style.setProperty('--dy', `${ny * travel}px`);
@@ -2806,7 +2927,7 @@
           scene.classList.add('unlocked');
           huntIntro.classList.add('show');
           huntIntro.setAttribute('aria-hidden','false');
-        }, 3250);
+        }, 1050);
       }
 
       function checkCode() {
@@ -3127,6 +3248,11 @@
 
       inventoryBtn.addEventListener('click',()=>{
         const opening=!inventoryPanel.classList.contains('open');
+        if(opening&&chestPage.classList.contains('open')){
+          chestPage.classList.remove('open');
+          chestPage.setAttribute('aria-hidden','true');
+          chestBtn.classList.remove('active');
+        }
         inventoryPanel.classList.toggle('open',opening);
         inventoryPanel.setAttribute('aria-hidden',opening?'false':'true');
         inventoryBtn.classList.toggle('active',opening);
