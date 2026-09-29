@@ -1690,49 +1690,98 @@
         // Shut the camera down after the UI has already advanced.
         setTimeout(()=>{ void stopScanner(); },0);
       }
+      async function resetScannerInstance(){
+        if(qrScanner){
+          try{
+            if(scannerRunning)await qrScanner.stop();
+            else if(typeof qrScanner.clear==='function')await qrScanner.clear();
+          }catch(_){}
+        }
+        scannerRunning=false;
+        qrScanner=null;
+        const reader=document.getElementById('qr-reader');
+        if(reader)reader.innerHTML='';
+      }
+
+      function scannerConfig(){
+        return {
+          fps:12,
+          qrbox:{width:245,height:245},
+          aspectRatio:1,
+          disableFlip:false
+        };
+      }
+
+      async function startScannerWith(cameraChoice){
+        await resetScannerInstance();
+        qrScanner=new Html5Qrcode('qr-reader');
+        await qrScanner.start(
+          cameraChoice,
+          scannerConfig(),
+          unlockFromQr,
+          ()=>{}
+        );
+        scannerRunning=true;
+
+        // A very fast decode can happen before start() resolves. If it did,
+        // immediately stop the now-started camera instead of leaving it hidden.
+        if(qrSolved){
+          try{await qrScanner.stop();}catch(_){}
+          scannerRunning=false;
+          return true;
+        }
+
+        scanStatus.className='scan-status';
+        scanStatus.textContent='Point the camera at the Ronan Hunt QR code.';
+        return true;
+      }
+
       async function openScanner(){
         scannerOverlay.classList.add('open');
         scannerOverlay.setAttribute('aria-hidden','false');
         scanStatus.className='scan-status';
-        scanStatus.textContent='Allow camera access, then point it at the hunt QR code.';
+        scanStatus.textContent='Starting camera…';
         qrSolved=false;
+
         if(typeof Html5Qrcode==='undefined'){
           scanStatus.className='scan-status error';
           scanStatus.textContent='The QR scanner did not load. Refresh and try again.';
           return;
         }
-        if(!qrScanner)qrScanner=new Html5Qrcode('qr-reader');
+
+        // First use the simplest, best-supported rear-camera request.
         try{
-          await qrScanner.start(
-            {facingMode:{ideal:'environment'}},
-            {
-              fps:15,
-              qrbox:(viewWidth,viewHeight)=>{
-                const edge=Math.floor(Math.min(viewWidth,viewHeight)*0.78);
-                return {width:edge,height:edge};
-              },
-              aspectRatio:1,
-              disableFlip:false
-            },
-            unlockFromQr,
-            ()=>{}
-          );
-          scannerRunning=true;
-
-          // A very fast decode can happen before start() resolves. If it did,
-          // immediately stop the now-started camera instead of leaving it hidden.
-          if(qrSolved){
-            try{await qrScanner.stop();}catch(_){}
-            scannerRunning=false;
-            return;
-          }
-
-          scanStatus.textContent='Point the camera at the Ronan Hunt QR code.';
-        }catch(_){
+          await startScannerWith({facingMode:'environment'});
+          return;
+        }catch(firstError){
           scannerRunning=false;
-          if(!qrSolved){
-            scanStatus.className='scan-status error';
-            scanStatus.textContent='Camera could not start. You can scan from a photo below.';
+        }
+
+        // If a browser rejects facingMode (common on some iPhones/webviews),
+        // enumerate the cameras and explicitly choose the rear-most one.
+        try{
+          const cameras=await Html5Qrcode.getCameras();
+          if(!cameras||!cameras.length)throw new Error('No cameras found');
+
+          const rear=
+            cameras.find(c=>/back|rear|environment|world/i.test(c.label||'')) ||
+            cameras[cameras.length-1] ||
+            cameras[0];
+
+          await startScannerWith(rear.id);
+          return;
+        }catch(secondError){
+          await resetScannerInstance();
+
+          const message=String(secondError&&secondError.message||secondError||'');
+          scanStatus.className='scan-status error';
+
+          if(/permission|denied|notallowed/i.test(message)){
+            scanStatus.textContent='Camera access is blocked. Allow camera access for this site, then tap Scan QR Code again.';
+          }else if(/notfound|no cameras|devicesnotfound/i.test(message)){
+            scanStatus.textContent='No camera was found on this device. You can scan from a photo below.';
+          }else{
+            scanStatus.textContent='Camera could not start. Tap Scan QR Code again, or scan from a photo below.';
           }
         }
       }
