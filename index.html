@@ -1056,6 +1056,109 @@
       color:#fff;
       background:#10212d;
     }
+    .route-scan{
+      width:100%;
+      height:52px;
+      margin-top:10px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      background:#8a2019;
+      color:white;
+      font-size:14px;
+      font-weight:950;
+      box-shadow:0 10px 24px rgba(90,26,20,.22);
+    }
+    .route-scan svg{width:21px;height:21px}
+
+    .golden-key-animation{
+      position:absolute;
+      z-index:6;
+      left:50%;
+      top:50%;
+      width:110px;
+      height:110px;
+      pointer-events:none;
+      opacity:0;
+      transform:translate(48vw,18vh) rotate(-35deg) scale(.7);
+      filter:drop-shadow(0 12px 16px rgba(84,50,5,.38));
+    }
+    .golden-key-animation.play{
+      animation:keyIntoLock 1.45s cubic-bezier(.18,.8,.24,1) forwards;
+    }
+    .golden-key-animation svg{width:100%;height:100%}
+    #mainChestLid{
+      transform-box:fill-box;
+      transform-origin:50% 100%;
+      transition:transform .52s cubic-bezier(.2,.9,.25,1);
+    }
+    .main-chest.opened #mainChestLid{transform:translateY(-28px) rotate(-8deg)}
+    .main-chest.opened{animation:chestOpenPop .55s cubic-bezier(.2,.9,.25,1)}
+    @keyframes keyIntoLock{
+      0%{opacity:0;transform:translate(48vw,18vh) rotate(-35deg) scale(.7)}
+      18%{opacity:1}
+      72%{opacity:1;transform:translate(-10px,4px) rotate(6deg) scale(1)}
+      88%{opacity:1;transform:translate(-10px,4px) rotate(95deg) scale(.92)}
+      100%{opacity:0;transform:translate(-10px,4px) rotate(105deg) scale(.88)}
+    }
+    @keyframes chestOpenPop{
+      0%{transform:scale(1)}
+      45%{transform:scale(1.035)}
+      100%{transform:scale(1)}
+    }
+
+    .final-reward-page{
+      position:absolute;
+      inset:0;
+      z-index:48;
+      display:none;
+      overflow:auto;
+      background:
+        radial-gradient(circle at 50% 10%,rgba(30,102,160,.42),transparent 34%),
+        linear-gradient(180deg,#081427 0%,#0d2339 100%);
+      color:white;
+    }
+    .final-reward-page.open{display:block;animation:introReveal .45s ease both}
+    .final-reward-inner{
+      min-height:100%;
+      width:min(100%,720px);
+      margin:0 auto;
+      padding:max(46px,calc(env(safe-area-inset-top) + 26px)) 18px max(30px,calc(env(safe-area-inset-bottom) + 18px));
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      gap:18px;
+    }
+    .final-reward-image{
+      width:min(92vw,520px);
+      max-height:68dvh;
+      object-fit:contain;
+      border-radius:24px;
+      box-shadow:0 24px 70px rgba(0,0,0,.45);
+      animation:rewardPop .48s cubic-bezier(.2,.9,.25,1) both;
+    }
+    .final-reward-text{
+      margin:0;
+      width:min(100%,560px);
+      font-size:clamp(24px,6vw,40px);
+      line-height:1.05;
+      font-weight:950;
+      letter-spacing:-.045em;
+      text-shadow:0 6px 24px rgba(0,0,0,.32);
+    }
+    .final-reward-close{
+      width:min(100%,360px);
+      height:54px;
+      border-radius:18px;
+      background:rgba(255,255,255,.94);
+      color:#10212d;
+      font-size:14px;
+      font-weight:900;
+    }
 
     .chest-page{
       position:absolute;
@@ -1397,7 +1500,7 @@
               </linearGradient>
             </defs>
             <ellipse cx="160" cy="211" rx="120" ry="13" fill="rgba(20,25,18,.18)"/>
-            <path d="M45 94c0-48 39-72 115-72s115 24 115 72v20H45V94Z" fill="url(#mainWoodTop)" stroke="#4d2713" stroke-width="8"/>
+            <path id="mainChestLid" d="M45 94c0-48 39-72 115-72s115 24 115 72v20H45V94Z" fill="url(#mainWoodTop)" stroke="#4d2713" stroke-width="8"/>
             <path d="M48 112h224v88c0 9-7 16-16 16H64c-9 0-16-7-16-16v-88Z" fill="url(#mainWoodBody)" stroke="#4d2713" stroke-width="8"/>
             <path d="M48 119h224M88 31v178M232 31v178" stroke="#d3a13b" stroke-width="12" opacity=".9"/>
             <rect x="42" y="102" width="236" height="21" rx="5" fill="url(#mainGold)" stroke="#6c470f" stroke-width="4"/>
@@ -1407,6 +1510,13 @@
             <path d="M160 136v15" stroke="#5c3a11" stroke-width="7" stroke-linecap="round"/>
           </svg>
         </button>
+        <div class="golden-key-animation" id="goldenKeyAnimation" aria-hidden="true">
+          <svg viewBox="0 0 120 120" fill="none">
+            <defs><linearGradient id="keyGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3a1"/><stop offset=".45" stop-color="#f2bf2f"/><stop offset="1" stop-color="#9a5c08"/></linearGradient></defs>
+            <circle cx="34" cy="38" r="21" stroke="url(#keyGold)" stroke-width="13"/>
+            <path d="M49 53l49 49M75 79l12-12M87 91l12-12" stroke="url(#keyGold)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
         <p class="main-chest-message" id="mainChestMessage" aria-live="polite">Chest is locked.</p>
         <button class="coordinate-chip" id="mainCoordinates" type="button" aria-label="Inspect scrambled coordinates">
           <span class="coord-label">Scrambled Coordinates</span>
@@ -1441,6 +1551,10 @@
           <a class="route-link" href="https://maps.apple.com/?daddr=53.54386,-113.28609&dirflg=d" target="_blank" rel="noopener">Apple Maps</a>
           <a class="route-link" href="https://www.google.com/maps/dir/?api=1&destination=53.54386,-113.28609&travelmode=driving" target="_blank" rel="noopener">Google Maps</a>
         </div>
+        <button class="route-scan" id="routeScanQr4" type="button">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 8h3v3H8V8Zm5 0h3v3h-3V8Zm-5 5h3v3H8v-3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Scan QR Code</span>
+        </button>
       </div>
     </section>
 
@@ -1545,6 +1659,33 @@
       </div>
     </section>
 
+    <section class="qr-reward-overlay" id="qr4RewardOverlay" aria-hidden="true" aria-label="Golden Key unlocked">
+      <div class="qr-reward-card">
+        <p class="qr-reward-kicker">Item Unlocked</p>
+        <h3>Golden Key</h3>
+        <div class="analyzer-reward-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none">
+            <circle cx="20" cy="22" r="11" stroke="#f6d86c" stroke-width="7"/>
+            <path d="M28 30l27 27M42 44l8-8M49 51l8-8" stroke="#f6d86c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="qr-reward-name">Golden Key</div>
+        <p class="qr-reward-copy">Added to your inventory. This looks like the key that opens the chest.</p>
+        <button class="qr-reward-next" id="goToChestAfterQr4" type="button">
+          <span>Go to Chest</span>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <section class="final-reward-page" id="finalRewardPage" aria-hidden="true" aria-label="Final chest reward">
+      <div class="final-reward-inner">
+        <img class="final-reward-image" src="./chest-reward.png?v=1" alt="Minecraft Dungeons 2 artwork" />
+        <p class="final-reward-text">Go back to Maguire's house and play Minecraft Dungeons 2.</p>
+        <button class="final-reward-close" id="finalRewardClose" type="button">Back to Chest</button>
+      </div>
+    </section>
+
     <div class="scanner-overlay" id="scannerOverlay" aria-hidden="true">
       <section class="scanner-sheet" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
         <div class="scanner-head"><h2 class="scanner-title" id="scannerTitle">Scan hunt code</h2><button class="scanner-close" id="scannerClose" type="button" aria-label="Close scanner">×</button></div>
@@ -1630,6 +1771,9 @@
       const chestPage = document.getElementById('chestPage');
       const mainChest = document.getElementById('mainChest');
       const mainChestMessage = document.getElementById('mainChestMessage');
+      const goldenKeyAnimation = document.getElementById('goldenKeyAnimation');
+      const finalRewardPage = document.getElementById('finalRewardPage');
+      const finalRewardClose = document.getElementById('finalRewardClose');
       const mainCoordinates = document.getElementById('mainCoordinates');
       const coordinateOverlay = document.getElementById('coordinateOverlay');
       const coordinateClose = document.getElementById('coordinateClose');
@@ -1642,6 +1786,7 @@
       const routeMapEl = document.getElementById('routeMap');
       const routeClose = document.getElementById('routeClose');
       const routeStatus = document.getElementById('routeStatus');
+      const routeScanQr4 = document.getElementById('routeScanQr4');
       const mapActions = document.getElementById('mapActions');
       const localizeCta = document.getElementById('localizeCta');
       const scanCta = document.getElementById('scanCta');
@@ -1656,6 +1801,8 @@
       const openAnalyzerInventory = document.getElementById('openAnalyzerInventory');
       const qr3RewardOverlay = document.getElementById('qr3RewardOverlay');
       const goToChestAfterQr3 = document.getElementById('goToChestAfterQr3');
+      const qr4RewardOverlay = document.getElementById('qr4RewardOverlay');
+      const goToChestAfterQr4 = document.getElementById('goToChestAfterQr4');
       const scannerOverlay = document.getElementById('scannerOverlay');
       const scannerClose = document.getElementById('scannerClose');
       const scanStatus = document.getElementById('scanStatus');
@@ -1677,6 +1824,7 @@
       const QR1_TOKEN = 'RONAN-HUNT|STAGE-2|8D7K-PINE-42M';
       const QR2_TOKEN = 'RONAN-HUNT|STAGE-3|SHED-02|PHOTO-ANALYZER-7K4M';
       const QR3_TOKEN = 'RONAN-HUNT|STAGE-4|RESERVED-03|Q3-4N7P';
+      const QR4_TOKEN = 'RONAN-HUNT|STAGE-5|RESERVED-04|Q4-9C2R';
       const DESTINATION = {lat:53.54386,lng:-113.28609};
       const params = new URLSearchParams(location.search);
       const resumeQr1 = params.get('resume') === 'qr1';
@@ -1690,6 +1838,8 @@
       ];
       let analyzerPhotoIndex = 0;
       let scannerReturnToAnalyzer = false;
+      let scannerReturnToRoute = false;
+      let chestOpened = false;
       let unlocked = false;
       let activeClue = 1;
       let qrScanner = null;
@@ -1708,6 +1858,7 @@
       let legacyQr2Canvas = null;
       let activeLegacyMatrix = null;
       const LEGACY_QR2_MATRIX = ["0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000111111101100111100101011111110000","0000100000101111001011001010000010000","0000101110101101001010101010111010000","0000101110101010111110101010111010000","0000101110101000100010101010111010000","0000100000100111110010001010000010000","0000111111101010101010101011111110000","0000000000001010111111101000000000000","0000110111101101011010110110001010000","0000101010110110110001011001110000000","0000111101101010001100101100111110000","0000001110001010101011101010100000000","0000010101001110111100011001011010000","0000110010110101000010111010100100000","0000101011001001110010010111011000000","0000110010101100101111010001010010000","0000100101011011001010101010101000000","0000010111010010001011010101001010000","0000101100101100101100100101010100000","0000100010011011011011101011011010000","0000111011110100111010101010010100000","0000000000001011001010011001011000000","0000111111101001011110111010101000000","0000100000101011001001011010010110000","0000101110100110111110001101001000000","0000101110101000100110110100100100000","0000101110100011011101001010001010000","0000100000101110110110010101100010000","0000111111101001101001101100010110000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000"];
+      const LEGACY_QR4_MATRIX = ["0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000111111101110111011001011111110000","0000100000100111011100111010000010000","0000101110100100001001100010111010000","0000101110101011000000001010111010000","0000101110101110100001110010111010000","0000100000101001100010010010000010000","0000111111101010101010101011111110000","0000000000001010110111101000000000000","0000100010111011110000010111110010000","0000100110001100011010001101111000000","0000011010110000000010001010110010000","0000101000000010101001001111010100000","0000100010111110011100001101111110000","0000010100001110000001110001100000000","0000011010100000111111000111001010000","0000010101010111110111101010100000000","0000000111101000010110000101010110000","0000100111000100111010000001100000000","0000000100111010100110100011010010000","0000001101010010001101001000010100000","0000110001111110111010011111111000000","0000000000001111000010101000110100000","0000111111101010011101111010100010000","0000100000100000110011101000110010000","0000101110101100010010011111101000000","0000101110100111011100001101101010000","0000101110100101000100011110010110000","0000100000100010100101001011110110000","0000111111101101000101111101011100000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000"];
       const LEGACY_QR3_MATRIX = ["0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000111111101110011101001011111110000","0000100000100010100100101010000010000","0000101110101010110001111010111010000","0000101110100011000111001010111010000","0000101110100001000110110010111010000","0000100000101110011010101010000010000","0000111111101010101010101011111110000","0000000000000110010000111000000000000","0000101000110011110111010001001010000","0000010101010100000010010101000000000","0000111110100010011010111010001010000","0000011001010101101110111000010010000","0000101011110100111011001010111000000","0000000110011011011000001001011000000","0000101001101001100111011111110010000","0000110100001011010100101101100110000","0000101011111001010101000010010000000","0000010101001100100100011001011000000","0000111000110111011101010011101010000","0000000111000001101100010111010010000","0000110111101000011011011111111110000","0000000000001110111010011000101100000","0000111111101011100111101010111010000","0000100000100001010000101000110100000","0000101110100111010001011111101110000","0000101110100111100100110101010010000","0000101110101110000100100110101110000","0000100000100101011010001100110000000","0000111111101101111010111010011010000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000"];
       let inventoryItems = [];
 
