@@ -1645,7 +1645,7 @@
         scanStatus.className='scan-status';
         scanStatus.textContent='Point the camera at the Ronan Hunt QR code.';
       }
-      async function unlockFromQr(decodedText){
+      function unlockFromQr(decodedText){
         if(qrSolved)return;
 
         // The QR we expect is based on the clue currently on screen, not stale
@@ -1663,8 +1663,14 @@
           return;
         }
 
+        // Do NOT await qrScanner.stop() inside the decode callback. Some mobile
+        // browsers/html5-qrcode builds wait for the callback to finish before
+        // stop() can finish, which leaves the green detection box frozen forever.
         qrSolved=true;
-        await stopScanner();
+        try{
+          if(qrScanner&&scannerRunning&&typeof qrScanner.pause==='function')qrScanner.pause(true);
+        }catch(_){}
+
         scannerOverlay.classList.remove('open');
         scannerOverlay.setAttribute('aria-hidden','true');
         mapActions.classList.remove('show');
@@ -1680,6 +1686,9 @@
           scanStatus.textContent='Code accepted — item unlocked.';
           showQr2Reward();
         }
+
+        // Shut the camera down after the UI has already advanced.
+        setTimeout(()=>{ void stopScanner(); },0);
       }
       async function openScanner(){
         scannerOverlay.classList.add('open');
@@ -1694,13 +1703,37 @@
         }
         if(!qrScanner)qrScanner=new Html5Qrcode('qr-reader');
         try{
-          await qrScanner.start({facingMode:'environment'},{fps:12,qrbox:{width:245,height:245},aspectRatio:1},unlockFromQr,()=>{});
+          await qrScanner.start(
+            {facingMode:{ideal:'environment'}},
+            {
+              fps:15,
+              qrbox:(viewWidth,viewHeight)=>{
+                const edge=Math.floor(Math.min(viewWidth,viewHeight)*0.78);
+                return {width:edge,height:edge};
+              },
+              aspectRatio:1,
+              disableFlip:false
+            },
+            unlockFromQr,
+            ()=>{}
+          );
           scannerRunning=true;
+
+          // A very fast decode can happen before start() resolves. If it did,
+          // immediately stop the now-started camera instead of leaving it hidden.
+          if(qrSolved){
+            try{await qrScanner.stop();}catch(_){}
+            scannerRunning=false;
+            return;
+          }
+
           scanStatus.textContent='Point the camera at the Ronan Hunt QR code.';
         }catch(_){
           scannerRunning=false;
-          scanStatus.className='scan-status error';
-          scanStatus.textContent='Camera could not start. You can scan from a photo below.';
+          if(!qrSolved){
+            scanStatus.className='scan-status error';
+            scanStatus.textContent='Camera could not start. You can scan from a photo below.';
+          }
         }
       }
 
