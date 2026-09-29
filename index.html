@@ -777,6 +777,69 @@
     .localize-return{background:rgba(244,240,231,.9);color:#10212d;border:1px solid rgba(255,255,255,.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
     .localize-scan{background:#10212d;color:white}
     .localize-actions svg{width:20px;height:20px}
+    .qr-reward-overlay{
+      position:absolute;
+      inset:0;
+      z-index:34;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:max(22px,env(safe-area-inset-top)) 18px max(22px,env(safe-area-inset-bottom));
+      background:rgba(7,16,22,.7);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+    .qr-reward-overlay.open{display:flex;animation:rewardFade .28s ease both}
+    .qr-reward-card{
+      width:min(100%,430px);
+      border-radius:30px;
+      padding:24px 20px 20px;
+      text-align:center;
+      color:#10212d;
+      background:#f4f0e7;
+      border:1px solid rgba(255,255,255,.75);
+      box-shadow:0 28px 90px rgba(0,0,0,.38);
+      transform-origin:center;
+      animation:rewardPop .42s cubic-bezier(.2,.9,.25,1) both;
+    }
+    .qr-reward-kicker{margin:0 0 4px;font-size:11px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:rgba(16,33,45,.48)}
+    .qr-reward-card h3{margin:0;font-size:34px;letter-spacing:-.045em}
+    .qr-reward-art{width:min(86%,300px);margin:14px auto 6px;display:block;filter:drop-shadow(0 14px 18px rgba(21,25,19,.18))}
+    .qr-reward-name{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+      margin:4px auto 8px;
+      padding:7px 13px;
+      border-radius:999px;
+      background:rgba(16,33,45,.08);
+      border:1px solid rgba(16,33,45,.1);
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+    .qr-reward-copy{margin:4px auto 18px;max-width:330px;font-size:13px;line-height:1.45;font-weight:700;color:rgba(16,33,45,.63)}
+    .qr-reward-next{
+      width:100%;
+      height:58px;
+      padding:0 20px;
+      border-radius:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      background:#10212d;
+      color:white;
+      font-size:16px;
+      font-weight:900;
+      flex:none;
+    }
+    .qr-reward-next svg{width:21px;height:21px}
+    @keyframes rewardFade{from{opacity:0}to{opacity:1}}
+    @keyframes rewardPop{from{opacity:0;transform:translateY(16px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+
     .scanner-overlay{position:absolute;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center;padding:18px 16px max(16px,env(safe-area-inset-bottom));background:rgba(7,16,22,.68);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
     .scanner-overlay.open{display:flex}
     .scanner-sheet{width:min(100%,520px);max-height:min(88dvh,720px);overflow:auto;border-radius:28px;padding:18px;background:#f4f0e7;color:#10212d;box-shadow:0 28px 90px rgba(0,0,0,.38)}
@@ -974,6 +1037,50 @@
         </button>
       </div>
     </section>
+    <section class="qr-reward-overlay" id="qrRewardOverlay" aria-hidden="true" aria-label="Item unlocked">
+      <div class="qr-reward-card">
+        <p class="qr-reward-kicker">Item Unlocked</p>
+        <h3>Unknown Photos</h3>
+        <svg class="qr-reward-art" viewBox="0 0 340 250" role="img" aria-label="A pile of unknown Polaroid photos">
+          <defs>
+            <linearGradient id="photoShade1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#536c63"/>
+              <stop offset="1" stop-color="#1c2d2b"/>
+            </linearGradient>
+            <linearGradient id="photoShade2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#7f7863"/>
+              <stop offset="1" stop-color="#3f463f"/>
+            </linearGradient>
+          </defs>
+          <g transform="translate(56 45) rotate(-14 90 90)">
+            <rect x="0" y="0" width="142" height="174" rx="5" fill="#fbf8ef" stroke="#d4cec0" stroke-width="3"/>
+            <rect x="11" y="12" width="120" height="119" rx="2" fill="url(#photoShade2)"/>
+            <circle cx="39" cy="45" r="20" fill="#a0a285" opacity=".55"/>
+            <path d="M12 110l34-32 25 24 20-19 40 41v7H11Z" fill="#2f4037" opacity=".68"/>
+          </g>
+          <g transform="translate(150 30) rotate(12 78 92)">
+            <rect x="0" y="0" width="142" height="174" rx="5" fill="#fffdf6" stroke="#d4cec0" stroke-width="3"/>
+            <rect x="11" y="12" width="120" height="119" rx="2" fill="url(#photoShade1)"/>
+            <path d="M11 110l28-29 22 18 22-32 48 51v13H11Z" fill="#111d1b" opacity=".72"/>
+            <circle cx="98" cy="42" r="17" fill="#c8c39a" opacity=".45"/>
+          </g>
+          <g transform="translate(98 62) rotate(-1 80 94)">
+            <rect x="0" y="0" width="150" height="184" rx="5" fill="#fffdf7" stroke="#d4cec0" stroke-width="3"/>
+            <rect x="12" y="13" width="126" height="125" rx="2" fill="#263937"/>
+            <path d="M12 108l32-37 28 31 19-19 47 47v8H12Z" fill="#0d1917" opacity=".8"/>
+            <path d="M35 52c13-17 31-21 43-7 9 11 5 25-7 33-12 8-33 3-36-10-1-5-1-10 0-16Z" fill="#8a8d73" opacity=".45"/>
+            <text x="75" y="164" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#5d594f">?</text>
+          </g>
+        </svg>
+        <div class="qr-reward-name">Unknown Photos</div>
+        <p class="qr-reward-copy">Added to your inventory. You do not know what they are for yet.</p>
+        <button class="qr-reward-next" id="findNextCoin" type="button">
+          <span>Find Next Coin</span>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
     <div class="scanner-overlay" id="scannerOverlay" aria-hidden="true">
       <section class="scanner-sheet" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
         <div class="scanner-head"><h2 class="scanner-title" id="scannerTitle">Scan hunt code</h2><button class="scanner-close" id="scannerClose" type="button" aria-label="Close scanner">×</button></div>
@@ -1047,6 +1154,8 @@
       const localizePhoto = document.getElementById('localizePhoto');
       const returnMap = document.getElementById('returnMap');
       const localizeScan = document.getElementById('localizeScan');
+      const qrRewardOverlay = document.getElementById('qrRewardOverlay');
+      const findNextCoin = document.getElementById('findNextCoin');
       const scannerOverlay = document.getElementById('scannerOverlay');
       const scannerClose = document.getElementById('scannerClose');
       const scanStatus = document.getElementById('scanStatus');
@@ -1263,6 +1372,17 @@
         qrTargetX.style.setProperty('--qr-zoom-y', `${zoomedY}px`);
       }
 
+      function showQr1Reward(){
+        unlockInventoryItem({
+          id:'unknown-photos',
+          name:'Unknown Photos',
+          icon:'📷',
+          description:'A mysterious pile of Polaroid photos. Their purpose is still unknown.'
+        });
+        qrRewardOverlay.classList.add('open');
+        qrRewardOverlay.setAttribute('aria-hidden','false');
+      }
+
       function runQrSequence() {
         activeClue = 2;
         prepQrMapZoom();
@@ -1346,7 +1466,7 @@
         scannerOverlay.classList.remove('open');
         scannerOverlay.setAttribute('aria-hidden','true');
         mapActions.classList.remove('show');
-        runQrSequence();
+        showQr1Reward();
       }
       async function openScanner(){
         scannerOverlay.classList.add('open');
@@ -1411,6 +1531,12 @@
           localizePhoto.alt='Closer view of the hunt area with a paved path and trees';
         }
       }
+
+      findNextCoin.addEventListener('click',()=>{
+        qrRewardOverlay.classList.remove('open');
+        qrRewardOverlay.setAttribute('aria-hidden','true');
+        runQrSequence();
+      });
 
       inventoryBtn.addEventListener('click',()=>{
         const opening=!inventoryPanel.classList.contains('open');
@@ -1525,7 +1651,7 @@
         scene.classList.add('unlocked','hunt-started');
         topTools.classList.add('show');
         mapActions.classList.remove('show');
-        setTimeout(runQrSequence, 250);
+        setTimeout(showQr1Reward, 250);
         history.replaceState({}, '', location.pathname);
       }
     })();
