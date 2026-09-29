@@ -705,7 +705,9 @@
       padding:6px;
       overflow:hidden;
     }
-    .inventory-slot.filled{border-style:solid;background:#fffdf7;box-shadow:0 5px 14px rgba(16,33,45,.08)}
+    .inventory-slot.filled{border-style:solid;background:#fffdf7;box-shadow:0 5px 14px rgba(16,33,45,.08);cursor:pointer;width:auto;height:auto;color:#10212d}
+    button.inventory-slot.filled{appearance:none;-webkit-appearance:none;box-shadow:0 5px 14px rgba(16,33,45,.08)}
+    button.inventory-slot.filled:active{transform:scale(.95)}
     .inventory-icon{font-size:26px;line-height:1}
     .inventory-name{margin-top:4px;font-size:9px;line-height:1.1;font-weight:850;color:rgba(16,33,45,.75)}
     .inventory-empty{
@@ -715,6 +717,91 @@
       line-height:1.45;
       font-weight:720;
       color:rgba(16,33,45,.58);
+    }
+
+    .item-detail-overlay,.analyzer-clue-overlay{
+      position:absolute;
+      inset:0;
+      z-index:36;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:max(22px,env(safe-area-inset-top)) 18px max(22px,env(safe-area-inset-bottom));
+      background:rgba(7,16,22,.72);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+    .item-detail-overlay.open,.analyzer-clue-overlay.open{display:flex;animation:rewardFade .25s ease both}
+    .item-detail-card,.analyzer-clue-card{
+      position:relative;
+      width:min(100%,450px);
+      max-height:min(90dvh,760px);
+      overflow:auto;
+      border-radius:30px;
+      padding:24px 20px 20px;
+      text-align:center;
+      color:#10212d;
+      background:#f4f0e7;
+      border:1px solid rgba(255,255,255,.75);
+      box-shadow:0 28px 90px rgba(0,0,0,.38);
+      animation:rewardPop .36s cubic-bezier(.2,.9,.25,1) both;
+    }
+    .item-detail-close,.analyzer-clue-close{
+      position:absolute;
+      top:12px;
+      right:12px;
+      width:42px;
+      height:42px;
+      flex:0 0 42px;
+      border-radius:14px;
+      background:rgba(16,33,45,.09);
+      color:#10212d;
+      box-shadow:none;
+      font-size:24px;
+      z-index:2;
+    }
+    .item-detail-icon{font-size:62px;line-height:1;margin:14px 0 10px}
+    .item-detail-card h3,.analyzer-clue-card h3{margin:0;font-size:30px;letter-spacing:-.04em}
+    .item-detail-desc,.analyzer-clue-copy{margin:12px auto 18px;max-width:360px;font-size:14px;line-height:1.5;font-weight:700;color:rgba(16,33,45,.66)}
+    .item-use-btn,.arrived-btn{
+      width:100%;
+      height:58px;
+      padding:0 18px;
+      border-radius:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#10212d;
+      color:white;
+      font-size:15px;
+      font-weight:900;
+      flex:none;
+    }
+    .item-use-btn[hidden]{display:none}
+    .item-requirement{margin:0;font-size:12px;line-height:1.4;font-weight:800;color:#8a2019}
+    .analyzer-symbol{
+      width:96px;
+      height:96px;
+      margin:10px auto 12px;
+      border-radius:28px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(145deg,#233a43,#10212d);
+      color:white;
+      box-shadow:0 14px 30px rgba(16,33,45,.2);
+    }
+    .analyzer-symbol svg{width:54px;height:54px}
+    .analyzer-photo-wrap{display:none;margin-top:16px}
+    .analyzer-photo-wrap.show{display:block;animation:rewardFade .4s ease both}
+    .analyzer-photo-label{margin:0 0 10px;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:rgba(16,33,45,.5)}
+    .analyzer-photo{
+      width:100%;
+      max-height:58dvh;
+      object-fit:contain;
+      border-radius:20px;
+      display:block;
+      background:#d8d8d2;
+      box-shadow:0 14px 32px rgba(16,33,45,.16);
     }
 
     .chest-page{
@@ -837,6 +924,18 @@
       flex:none;
     }
     .qr-reward-next svg{width:21px;height:21px}
+    .analyzer-reward-art{
+      width:126px;
+      height:126px;
+      margin:18px auto 12px;
+      border-radius:32px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(145deg,#314c57,#10212d);
+      color:white;
+      box-shadow:0 16px 34px rgba(16,33,45,.22);
+    }
+    .analyzer-reward-art svg{width:68px;height:68px}
     @keyframes rewardFade{from{opacity:0}to{opacity:1}}
     @keyframes rewardPop{from{opacity:0;transform:translateY(16px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 
@@ -977,6 +1076,36 @@
       <p class="inventory-empty" id="inventoryEmpty">Items and tools you unlock during the hunt will appear here.</p>
     </section>
 
+    <section class="item-detail-overlay" id="itemDetailOverlay" aria-hidden="true" aria-label="Inventory item">
+      <div class="item-detail-card">
+        <button class="item-detail-close" id="itemDetailClose" type="button" aria-label="Close item">×</button>
+        <div class="item-detail-icon" id="itemDetailIcon">◆</div>
+        <h3 id="itemDetailName">Item</h3>
+        <p class="item-detail-desc" id="itemDetailDesc"></p>
+        <button class="item-use-btn" id="useAnalyzerBtn" type="button" hidden>Use the Analyzer</button>
+        <p class="item-requirement" id="itemRequirement" hidden>Find the Photograph Analyzer to inspect these photos.</p>
+      </div>
+    </section>
+
+    <section class="analyzer-clue-overlay" id="analyzerClueOverlay" aria-hidden="true" aria-label="Photograph analyzer clue">
+      <div class="analyzer-clue-card">
+        <button class="analyzer-clue-close" id="analyzerClueClose" type="button" aria-label="Close clue">×</button>
+        <div class="analyzer-symbol" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none"><rect x="10" y="14" width="34" height="28" rx="5" stroke="currentColor" stroke-width="4"/><circle cx="27" cy="28" r="8" stroke="currentColor" stroke-width="4"/><path d="M39 40l13 13M43 37l13 13" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>
+        </div>
+        <div id="analyzerIntro">
+          <p class="qr-reward-kicker">Photos Analyzed</p>
+          <h3>You Found New Clues</h3>
+          <p class="analyzer-clue-copy">You found new clues to the next coin. It looks like it starts at Maguire's house. Let's head there, then take a look at the first photo.</p>
+          <button class="arrived-btn" id="arrivedMaguire" type="button">I've Arrived at Maguire's House</button>
+        </div>
+        <div class="analyzer-photo-wrap" id="analyzerPhotoWrap">
+          <p class="analyzer-photo-label">Photo 1</p>
+          <img class="analyzer-photo" src="./analyzer-photo-01.jpg?v=1" alt="First photograph clue revealed by the photograph analyzer" />
+        </div>
+      </div>
+    </section>
+
     <section class="chest-page" id="chestPage" aria-hidden="true" aria-label="Locked chest">
       <div class="chest-page-inner">
         <button class="main-chest" id="mainChest" type="button" aria-label="Locked treasure chest">
@@ -1081,6 +1210,22 @@
       </div>
     </section>
 
+    <section class="qr-reward-overlay" id="qr2RewardOverlay" aria-hidden="true" aria-label="Photograph Analyzer unlocked">
+      <div class="qr-reward-card">
+        <p class="qr-reward-kicker">Item Unlocked</p>
+        <h3>Photograph Analyzer</h3>
+        <div class="analyzer-reward-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none"><rect x="10" y="13" width="35" height="29" rx="5" stroke="currentColor" stroke-width="4"/><circle cx="27.5" cy="27.5" r="8" stroke="currentColor" stroke-width="4"/><path d="M40 40l14 14" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><path d="M48 11v8M44 15h8" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="qr-reward-name">Photograph Analyzer</div>
+        <p class="qr-reward-copy">Added to your inventory. This tool can inspect mysterious photographs for hidden clues.</p>
+        <button class="qr-reward-next" id="openAnalyzerInventory" type="button">
+          <span>Open Inventory</span>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
     <div class="scanner-overlay" id="scannerOverlay" aria-hidden="true">
       <section class="scanner-sheet" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
         <div class="scanner-head"><h2 class="scanner-title" id="scannerTitle">Scan hunt code</h2><button class="scanner-close" id="scannerClose" type="button" aria-label="Close scanner">×</button></div>
@@ -1142,6 +1287,18 @@
       const inventoryClose = document.getElementById('inventoryClose');
       const inventoryGrid = document.getElementById('inventoryGrid');
       const inventoryEmpty = document.getElementById('inventoryEmpty');
+      const itemDetailOverlay = document.getElementById('itemDetailOverlay');
+      const itemDetailClose = document.getElementById('itemDetailClose');
+      const itemDetailIcon = document.getElementById('itemDetailIcon');
+      const itemDetailName = document.getElementById('itemDetailName');
+      const itemDetailDesc = document.getElementById('itemDetailDesc');
+      const useAnalyzerBtn = document.getElementById('useAnalyzerBtn');
+      const itemRequirement = document.getElementById('itemRequirement');
+      const analyzerClueOverlay = document.getElementById('analyzerClueOverlay');
+      const analyzerClueClose = document.getElementById('analyzerClueClose');
+      const analyzerIntro = document.getElementById('analyzerIntro');
+      const arrivedMaguire = document.getElementById('arrivedMaguire');
+      const analyzerPhotoWrap = document.getElementById('analyzerPhotoWrap');
       const chestBtn = document.getElementById('chestBtn');
       const chestPage = document.getElementById('chestPage');
       const mainChest = document.getElementById('mainChest');
@@ -1156,6 +1313,8 @@
       const localizeScan = document.getElementById('localizeScan');
       const qrRewardOverlay = document.getElementById('qrRewardOverlay');
       const findNextCoin = document.getElementById('findNextCoin');
+      const qr2RewardOverlay = document.getElementById('qr2RewardOverlay');
+      const openAnalyzerInventory = document.getElementById('openAnalyzerInventory');
       const scannerOverlay = document.getElementById('scannerOverlay');
       const scannerClose = document.getElementById('scannerClose');
       const scanStatus = document.getElementById('scanStatus');
@@ -1174,7 +1333,8 @@
       const QR_TARGET_SCALE = 4.1;
       const PROGRESS_KEY = 'ronanHuntProgressV2';
       const INVENTORY_KEY = 'ronanHuntInventoryV1';
-      const NEXT_QR = 'RONAN-HUNT|STAGE-2|8D7K-PINE-42M';
+      const QR1_TOKEN = 'RONAN-HUNT|STAGE-2|8D7K-PINE-42M';
+      const QR2_TOKEN = 'RONAN-HUNT|STAGE-3|SHED-02|PHOTO-ANALYZER-7K4M';
       const params = new URLSearchParams(location.search);
       const resumeQr1 = params.get('resume') === 'qr1';
       let unlocked = false;
@@ -1192,12 +1352,34 @@
         renderInventory();
       }
 
+      function hasInventoryItem(id){
+        return inventoryItems.some(item=>item.id===id);
+      }
+
+      function openInventoryItem(id){
+        const item=inventoryItems.find(entry=>entry.id===id);
+        if(!item)return;
+        inventoryPanel.classList.remove('open');
+        inventoryPanel.setAttribute('aria-hidden','true');
+        inventoryBtn.classList.remove('active');
+        itemDetailIcon.textContent=item.icon||'◆';
+        itemDetailName.textContent=item.name||'Item';
+        itemDetailDesc.textContent=item.description||'';
+        const isPhotos=item.id==='unknown-photos';
+        useAnalyzerBtn.hidden=!(isPhotos&&hasInventoryItem('photo-analyzer'));
+        itemRequirement.hidden=!(isPhotos&&!hasInventoryItem('photo-analyzer'));
+        itemDetailOverlay.classList.add('open');
+        itemDetailOverlay.setAttribute('aria-hidden','false');
+      }
+
       function renderInventory(){
         inventoryGrid.innerHTML='';
         const visible=inventoryItems.slice(0,8);
         visible.forEach(item=>{
-          const slot=document.createElement('div');
+          const slot=document.createElement('button');
+          slot.type='button';
           slot.className='inventory-slot filled';
+          slot.setAttribute('aria-label',`Open ${item.name||'inventory item'}`);
           const icon=document.createElement('div');
           icon.className='inventory-icon';
           icon.textContent=item.icon||'◆';
@@ -1205,6 +1387,7 @@
           name.className='inventory-name';
           name.textContent=item.name||'Item';
           slot.append(icon,name);
+          slot.addEventListener('click',()=>openInventoryItem(item.id));
           inventoryGrid.appendChild(slot);
         });
         for(let i=visible.length;i<8;i++){
@@ -1383,6 +1566,17 @@
         qrRewardOverlay.setAttribute('aria-hidden','false');
       }
 
+      function showQr2Reward(){
+        unlockInventoryItem({
+          id:'photo-analyzer',
+          name:'Photograph Analyzer',
+          icon:'🔎',
+          description:'A tool that can analyze photographs and reveal hidden information.'
+        });
+        qr2RewardOverlay.classList.add('open');
+        qr2RewardOverlay.setAttribute('aria-hidden','false');
+      }
+
       function runQrSequence() {
         activeClue = 2;
         prepQrMapZoom();
@@ -1453,20 +1647,35 @@
       }
       async function unlockFromQr(decodedText){
         if(qrSolved)return;
-        if((decodedText||'').trim()!==NEXT_QR){
+        const progress=currentProgress();
+        const expected=progress<=1?QR1_TOKEN:(progress===2?QR2_TOKEN:null);
+        if(!expected){
+          scanStatus.className='scan-status error';
+          scanStatus.textContent='The next hunt code is not active yet.';
+          return;
+        }
+        if((decodedText||'').trim()!==expected){
           scanStatus.className='scan-status error';
           scanStatus.textContent='That is not the next Ronan Hunt code.';
           return;
         }
         qrSolved=true;
         await stopScanner();
-        localStorage.setItem(PROGRESS_KEY,'2');
-        scanStatus.className='scan-status success';
-        scanStatus.textContent='Code accepted — map unlocked.';
         scannerOverlay.classList.remove('open');
         scannerOverlay.setAttribute('aria-hidden','true');
         mapActions.classList.remove('show');
-        showQr1Reward();
+
+        if(progress<=1){
+          localStorage.setItem(PROGRESS_KEY,'2');
+          scanStatus.className='scan-status success';
+          scanStatus.textContent='Code accepted — map unlocked.';
+          showQr1Reward();
+        }else{
+          localStorage.setItem(PROGRESS_KEY,'3');
+          scanStatus.className='scan-status success';
+          scanStatus.textContent='Code accepted — item unlocked.';
+          showQr2Reward();
+        }
       }
       async function openScanner(){
         scannerOverlay.classList.add('open');
@@ -1536,6 +1745,39 @@
         qrRewardOverlay.classList.remove('open');
         qrRewardOverlay.setAttribute('aria-hidden','true');
         runQrSequence();
+      });
+
+      itemDetailClose.addEventListener('click',()=>{
+        itemDetailOverlay.classList.remove('open');
+        itemDetailOverlay.setAttribute('aria-hidden','true');
+      });
+
+      useAnalyzerBtn.addEventListener('click',()=>{
+        itemDetailOverlay.classList.remove('open');
+        itemDetailOverlay.setAttribute('aria-hidden','true');
+        analyzerIntro.style.display='block';
+        analyzerPhotoWrap.classList.remove('show');
+        analyzerClueOverlay.classList.add('open');
+        analyzerClueOverlay.setAttribute('aria-hidden','false');
+      });
+
+      analyzerClueClose.addEventListener('click',()=>{
+        analyzerClueOverlay.classList.remove('open');
+        analyzerClueOverlay.setAttribute('aria-hidden','true');
+      });
+
+      arrivedMaguire.addEventListener('click',()=>{
+        analyzerIntro.style.display='none';
+        analyzerPhotoWrap.classList.add('show');
+      });
+
+      openAnalyzerInventory.addEventListener('click',()=>{
+        qr2RewardOverlay.classList.remove('open');
+        qr2RewardOverlay.setAttribute('aria-hidden','true');
+        renderInventory();
+        inventoryPanel.classList.add('open');
+        inventoryPanel.setAttribute('aria-hidden','false');
+        inventoryBtn.classList.add('active');
       });
 
       inventoryBtn.addEventListener('click',()=>{
