@@ -497,6 +497,103 @@
     .scene.unlocked .login,
     .scene.unlocked .shockwave { display: none; }
 
+    .hunt-intro{
+      position:absolute;
+      inset:0;
+      z-index:12;
+      display:none;
+      overflow:hidden;
+      color:#10212d;
+      background:
+        radial-gradient(circle at 50% 14%,rgba(255,255,255,.88),transparent 28%),
+        linear-gradient(180deg,#eef0dc 0%,#d8dfbf 48%,#b9c697 100%);
+    }
+    .hunt-intro.show{display:block;animation:introReveal .65s cubic-bezier(.2,.85,.22,1) both}
+    .hunt-intro.leaving{animation:introLeave .42s ease both;pointer-events:none}
+    .hunt-intro::before{
+      content:"";
+      position:absolute;
+      inset:auto -8% -9% -8%;
+      height:38%;
+      background:
+        radial-gradient(ellipse at 8% 100%,#6d7e4f 0 45%,transparent 46%),
+        radial-gradient(ellipse at 31% 100%,#77885b 0 49%,transparent 50%),
+        radial-gradient(ellipse at 55% 100%,#64764b 0 47%,transparent 48%),
+        radial-gradient(ellipse at 79% 100%,#758858 0 51%,transparent 52%),
+        radial-gradient(ellipse at 100% 100%,#607246 0 48%,transparent 49%);
+      opacity:.78;
+      pointer-events:none;
+    }
+    .hunt-intro-inner{
+      position:relative;
+      z-index:1;
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:space-between;
+      padding:max(42px,calc(env(safe-area-inset-top) + 24px)) 22px max(24px,calc(env(safe-area-inset-bottom) + 18px));
+      text-align:center;
+    }
+    .hunt-intro-copy{width:min(100%,520px)}
+    .hunt-intro-kicker{margin:0 0 8px;font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:rgba(16,33,45,.56)}
+    .hunt-intro h2{margin:0;font-size:clamp(42px,11vw,68px);line-height:.94;letter-spacing:-.055em;color:#10212d}
+    .hunt-intro p.intro-copy{margin:18px auto 0;max-width:440px;font-size:16px;line-height:1.5;font-weight:690;color:rgba(16,33,45,.78)}
+    .coin-row{display:flex;justify-content:center;gap:10px;margin-top:20px}
+    .coin-dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#f2cf63,#b97a17);border:2px solid rgba(255,255,255,.72);box-shadow:0 4px 10px rgba(63,50,18,.18);font-size:12px;font-weight:950;color:#6c4308}
+    .intro-bottom{width:min(100%,440px);display:flex;flex-direction:column;align-items:center;gap:13px}
+    .intro-chest{
+      width:min(64vw,250px);
+      height:auto;
+      padding:0;
+      border:0;
+      border-radius:24px;
+      background:transparent;
+      box-shadow:none;
+      cursor:pointer;
+      display:block;
+      flex:none;
+      touch-action:manipulation;
+    }
+    .intro-chest:active{transform:scale(.96)}
+    .intro-chest.denied{animation:chestBump .42s cubic-bezier(.36,.07,.19,.97)}
+    .chest-message{
+      min-height:21px;
+      margin:0;
+      font-size:14px;
+      font-weight:850;
+      color:#74251e;
+      opacity:0;
+      transform:translateY(-4px);
+      transition:.22s ease;
+    }
+    .chest-message.show{opacity:1;transform:translateY(0)}
+    .start-hunt{
+      width:min(100%,330px);
+      height:58px;
+      padding:0 24px;
+      border-radius:20px;
+      background:#10212d;
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      font-size:16px;
+      font-weight:900;
+      flex:none;
+      box-shadow:0 14px 32px rgba(15,30,40,.24);
+    }
+    .start-hunt svg{width:21px;height:21px}
+    @keyframes introReveal{from{opacity:0;transform:scale(1.025)}to{opacity:1;transform:scale(1)}}
+    @keyframes introLeave{to{opacity:0;transform:scale(.985);filter:blur(4px)}}
+    @keyframes chestBump{
+      10%,90%{transform:translateX(-2px)}
+      20%,80%{transform:translateX(4px)}
+      30%,50%,70%{transform:translateX(-6px)}
+      40%,60%{transform:translateX(6px)}
+    }
+
     .map-actions{position:absolute;z-index:9;left:50%;bottom:max(28px,calc(env(safe-area-inset-bottom) + 16px));display:flex;gap:10px;width:min(calc(100% - 28px),480px);transform:translate(-50%,18px) scale(.96);opacity:0;pointer-events:none;transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.25,1)}
     .map-actions.show{opacity:1;transform:translate(-50%,0) scale(1);pointer-events:auto}
     .hunt-action{height:56px;width:auto;min-width:0;flex:1 1 0;padding:0 16px;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:9px;font-size:14px;font-weight:850;letter-spacing:-.01em;box-shadow:0 14px 38px rgba(8,20,28,.24)}
@@ -569,6 +666,60 @@
       </div>
     </div>
     <div class="tiny-mark" aria-hidden="true">Map unlocked</div>
+
+    <section class="hunt-intro" id="huntIntro" aria-hidden="true" aria-label="Welcome to the hunt">
+      <div class="hunt-intro-inner">
+        <div class="hunt-intro-copy">
+          <p class="hunt-intro-kicker">Ronan Hunt</p>
+          <h2>Welcome to the Hunt</h2>
+          <p class="intro-copy">Your goal is to find <strong>four coins</strong> scattered across Sherwood Park. Find all four to unlock this chest.</p>
+          <div class="coin-row" aria-label="Four coins to find">
+            <span class="coin-dot">1</span>
+            <span class="coin-dot">2</span>
+            <span class="coin-dot">3</span>
+            <span class="coin-dot">4</span>
+          </div>
+        </div>
+
+        <div class="intro-bottom">
+          <button class="intro-chest" id="introChest" type="button" aria-label="Locked treasure chest">
+            <svg viewBox="0 0 320 230" role="img" aria-label="Locked treasure chest illustration">
+              <defs>
+                <linearGradient id="woodTop" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#9c5a26"/>
+                  <stop offset="1" stop-color="#6f3717"/>
+                </linearGradient>
+                <linearGradient id="woodBody" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#a66027"/>
+                  <stop offset=".55" stop-color="#804119"/>
+                  <stop offset="1" stop-color="#673113"/>
+                </linearGradient>
+                <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#f6d86c"/>
+                  <stop offset=".5" stop-color="#c99020"/>
+                  <stop offset="1" stop-color="#8c5a0e"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="160" cy="211" rx="120" ry="13" fill="rgba(20,25,18,.18)"/>
+              <path d="M45 94c0-48 39-72 115-72s115 24 115 72v20H45V94Z" fill="url(#woodTop)" stroke="#4d2713" stroke-width="8"/>
+              <path d="M48 112h224v88c0 9-7 16-16 16H64c-9 0-16-7-16-16v-88Z" fill="url(#woodBody)" stroke="#4d2713" stroke-width="8"/>
+              <path d="M48 119h224M88 31v178M232 31v178" stroke="#d3a13b" stroke-width="12" opacity=".9"/>
+              <rect x="42" y="102" width="236" height="21" rx="5" fill="url(#gold)" stroke="#6c470f" stroke-width="4"/>
+              <rect x="133" y="100" width="54" height="68" rx="9" fill="url(#gold)" stroke="#6c470f" stroke-width="5"/>
+              <path d="M145 101V84c0-20 30-20 30 0v17" fill="none" stroke="#e7be4c" stroke-width="9" stroke-linecap="round"/>
+              <circle cx="160" cy="130" r="8" fill="#5c3a11"/>
+              <path d="M160 136v15" stroke="#5c3a11" stroke-width="7" stroke-linecap="round"/>
+              <path d="M64 145h45M211 145h45M64 178h45M211 178h45" stroke="#5b2d14" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+            </svg>
+          </button>
+          <p class="chest-message" id="chestMessage" aria-live="polite">Chest is locked. Find the key.</p>
+          <button class="start-hunt" id="startHunt" type="button">
+            <span>Take Me to the Hunt</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
 
     <div class="map-actions" id="mapActions">
       <button class="hunt-action secondary" id="localizeCta" type="button" aria-label="Localize the hunt area">
@@ -645,6 +796,10 @@
       const input = document.getElementById('codeInput');
       const shell = document.getElementById('codeShell');
       const message = document.getElementById('message');
+      const huntIntro = document.getElementById('huntIntro');
+      const introChest = document.getElementById('introChest');
+      const chestMessage = document.getElementById('chestMessage');
+      const startHunt = document.getElementById('startHunt');
       const mapActions = document.getElementById('mapActions');
       const localizeCta = document.getElementById('localizeCta');
       const scanCta = document.getElementById('scanCta');
@@ -936,10 +1091,11 @@
         input.disabled = true;
         prepClearAnimation();
         requestAnimationFrame(() => scene.classList.add('unlocking'));
-        setTimeout(focusOnX, 2450);
         setTimeout(() => {
           scene.classList.remove('unlocking');
           scene.classList.add('unlocked');
+          huntIntro.classList.add('show');
+          huntIntro.setAttribute('aria-hidden','false');
         }, 3250);
       }
 
@@ -960,6 +1116,22 @@
           localizePhoto.alt='Closer view of the hunt area with a paved path and trees';
         }
       }
+
+      introChest.addEventListener('click',()=>{
+        introChest.classList.remove('denied');
+        void introChest.offsetWidth;
+        introChest.classList.add('denied');
+        chestMessage.classList.add('show');
+      });
+
+      startHunt.addEventListener('click',()=>{
+        huntIntro.classList.add('leaving');
+        setTimeout(()=>{
+          huntIntro.classList.remove('show','leaving');
+          huntIntro.setAttribute('aria-hidden','true');
+          focusOnX();
+        },420);
+      });
 
       scanCta.addEventListener('click',openScanner);
       localizeCta.addEventListener('click',()=>{
