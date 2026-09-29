@@ -2486,6 +2486,155 @@
         }
       }
 
+      function syncCoordinateChips(){
+        const value=coordinatesDescrambled
+          ? '53.54386° N, 113.28609° W'
+          : '53.54Δ86° N, 113.28Ω09° W';
+        [introCoordinates,mainCoordinates].forEach(button=>{
+          if(!button)return;
+          const valueEl=button.querySelector('.coord-value');
+          if(valueEl)valueEl.textContent=value;
+          button.classList.toggle('revealed',coordinatesDescrambled);
+          const label=button.querySelector('.coord-label');
+          if(label)label.textContent=coordinatesDescrambled?'Coordinates Descrambled':'Scrambled Coordinates';
+        });
+      }
+
+      function openCoordinateOverlay(){
+        const hasTool=hasInventoryItem('coordinate-descrambler');
+        coordinateOverlay.classList.add('open');
+        coordinateOverlay.setAttribute('aria-hidden','false');
+
+        if(coordinatesDescrambled){
+          coordinateTitle.textContent='Coordinates Descrambled';
+          coordinateDisplay.textContent='53.54386° N, 113.28609° W';
+          coordinateCopy.textContent='These coordinates point to the location connected to the key.';
+          coordinateUse.hidden=false;
+          coordinateUse.textContent='Open Directions';
+          coordinateNeed.hidden=true;
+        }else{
+          coordinateTitle.textContent='Scrambled Coordinates';
+          coordinateDisplay.textContent='53.54Δ86° N, 113.28Ω09° W';
+          coordinateCopy.textContent="These coordinates might point to the location of the key. I can't read them. I need to descramble them.";
+          coordinateUse.hidden=!hasTool;
+          coordinateUse.textContent='Use the Descrambler';
+          coordinateNeed.hidden=hasTool;
+        }
+      }
+
+      function haversineMeters(a,b){
+        const r=6371000;
+        const rad=v=>v*Math.PI/180;
+        const dLat=rad(b.lat-a.lat);
+        const dLng=rad(b.lng-a.lng);
+        const lat1=rad(a.lat),lat2=rad(b.lat);
+        const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+        return 2*r*Math.asin(Math.min(1,Math.sqrt(h)));
+      }
+
+      function initRouteMap(){
+        if(routeMap||typeof L==='undefined')return;
+        routeMap=L.map(routeMapEl,{zoomControl:false}).setView([DESTINATION.lat,DESTINATION.lng],15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+          maxZoom:19,
+          attribution:'&copy; OpenStreetMap contributors'
+        }).addTo(routeMap);
+        L.control.zoom({position:'topright'}).addTo(routeMap);
+        routeDestinationMarker=L.marker([DESTINATION.lat,DESTINATION.lng]).addTo(routeMap).bindPopup('Key location');
+      }
+
+      async function requestLiveRoute(position){
+        if(routeFetchBusy||!routeMap)return;
+        const now=Date.now();
+        const point={lat:position.coords.latitude,lng:position.coords.longitude};
+
+        if(lastRoutePosition&&haversineMeters(lastRoutePosition,point)<12&&now-lastRouteAt<18000)return;
+
+        routeFetchBusy=true;
+        routeStatus.textContent='Updating live route…';
+
+        try{
+          const url=`https://router.project-osrm.org/route/v1/driving/${point.lng},${point.lat};${DESTINATION.lng},${DESTINATION.lat}?overview=full&geometries=geojson&steps=true`;
+          const response=await fetch(url);
+          if(!response.ok)throw new Error('route unavailable');
+          const data=await response.json();
+          const route=data.routes&&data.routes[0];
+          if(!route)throw new Error('no route');
+
+          const latLngs=route.geometry.coordinates.map(pair=>[pair[1],pair[0]]);
+          if(routeLine)routeLine.remove();
+          routeLine=L.polyline(latLngs,{color:'#2468d8',weight:6,opacity:.88}).addTo(routeMap);
+
+          const firstRoute=!lastRoutePosition;
+          lastRoutePosition=point;
+          lastRouteAt=now;
+
+          if(firstRoute){
+            routeMap.fitBounds(routeLine.getBounds().pad(.12),{padding:[30,30]});
+          }
+
+          const km=route.distance/1000;
+          const minutes=Math.max(1,Math.round(route.duration/60));
+          routeStatus.textContent=`Live route • ${km.toFixed(km<10?1:0)} km • about ${minutes} min • reroutes automatically`;
+        }catch(_){
+          routeStatus.textContent='Live routing is temporarily unavailable. Your location is still shown; use Apple Maps or Google Maps below for turn-by-turn directions.';
+        }finally{
+          routeFetchBusy=false;
+        }
+      }
+
+      function beginLiveNavigation(){
+        initRouteMap();
+        if(routeMap)setTimeout(()=>routeMap.invalidateSize(),60);
+
+        if(!navigator.geolocation){
+          routeStatus.textContent='Location is not available in this browser. Use Apple Maps or Google Maps below.';
+          return;
+        }
+
+        if(routeWatchId!==null){
+          navigator.geolocation.clearWatch(routeWatchId);
+          routeWatchId=null;
+        }
+
+        routeStatus.textContent='Getting your location and planning the route…';
+        routeWatchId=navigator.geolocation.watchPosition(position=>{
+          const point=[position.coords.latitude,position.coords.longitude];
+          if(routeMap){
+            if(routeUserMarker)routeUserMarker.setLatLng(point);
+            else routeUserMarker=L.circleMarker(point,{radius:9,color:'#ffffff',weight:3,fillColor:'#2468d8',fillOpacity:1}).addTo(routeMap);
+          }
+          void requestLiveRoute(position);
+        },error=>{
+          if(error&&error.code===1){
+            routeStatus.textContent='Location access is blocked. Allow location access for this site, or use Apple Maps or Google Maps below.';
+          }else{
+            routeStatus.textContent='I could not get your current location. Try again or use Apple Maps or Google Maps below.';
+          }
+        },{
+          enableHighAccuracy:true,
+          maximumAge:4000,
+          timeout:15000
+        });
+      }
+
+      function openRoutePage(){
+        coordinateOverlay.classList.remove('open');
+        coordinateOverlay.setAttribute('aria-hidden','true');
+        routePage.classList.add('open');
+        routePage.setAttribute('aria-hidden','false');
+        setTimeout(beginLiveNavigation,80);
+      }
+
+      function closeRoutePage(){
+        routePage.classList.remove('open');
+        routePage.setAttribute('aria-hidden','true');
+        if(routeWatchId!==null&&navigator.geolocation){
+          navigator.geolocation.clearWatch(routeWatchId);
+          routeWatchId=null;
+        }
+      }
+
       function showAnalyzerPhoto(index){
         const total=ANALYZER_PHOTOS.length;
         analyzerPhotoIndex=((index%total)+total)%total;
@@ -2526,6 +2675,10 @@
       analyzerClueClose.addEventListener('click',()=>{
         analyzerClueOverlay.classList.remove('open');
         analyzerClueOverlay.setAttribute('aria-hidden','true');
+        if(activeClue>=3){
+          updateScanButton();
+          mapActions.classList.add('show');
+        }
       });
 
       arrivedMaguire.addEventListener('click',()=>{
@@ -2550,6 +2703,42 @@
         inventoryPanel.setAttribute('aria-hidden','false');
         inventoryBtn.classList.add('active');
       });
+
+      goToChestAfterQr3.addEventListener('click',()=>{
+        qr3RewardOverlay.classList.remove('open');
+        qr3RewardOverlay.setAttribute('aria-hidden','true');
+        chestPage.classList.add('open');
+        chestPage.setAttribute('aria-hidden','false');
+        chestBtn.classList.add('active');
+        syncCoordinateChips();
+      });
+
+      introCoordinates.addEventListener('click',openCoordinateOverlay);
+      mainCoordinates.addEventListener('click',openCoordinateOverlay);
+
+      coordinateClose.addEventListener('click',()=>{
+        coordinateOverlay.classList.remove('open');
+        coordinateOverlay.setAttribute('aria-hidden','true');
+      });
+
+      coordinateUse.addEventListener('click',()=>{
+        if(coordinatesDescrambled){
+          openRoutePage();
+          return;
+        }
+        if(!hasInventoryItem('coordinate-descrambler'))return;
+
+        coordinatesDescrambled=true;
+        syncCoordinateChips();
+        coordinateTitle.textContent='Coordinates Descrambled';
+        coordinateDisplay.textContent='53.54386° N, 113.28609° W';
+        coordinateCopy.textContent='Coordinates decoded. Opening a live route to the location…';
+        coordinateUse.hidden=true;
+        coordinateNeed.hidden=true;
+        setTimeout(openRoutePage,850);
+      });
+
+      routeClose.addEventListener('click',closeRoutePage);
 
       inventoryBtn.addEventListener('click',()=>{
         const opening=!inventoryPanel.classList.contains('open');
