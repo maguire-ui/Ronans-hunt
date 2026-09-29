@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Sync to latest main
+        run: git pull --ff-only origin main
       - name: Download analyzer clue photos
         run: |
           curl -L --fail --retry 3 "https://at.adobe.com/Be4O5zSYNPoHRNks" -o analyzer-photo-01.jpg
