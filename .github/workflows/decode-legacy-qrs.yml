@@ -1,4 +1,4 @@
-name: Decode legacy hunt QRs
+name: Inspect legacy hunt QRs
 on:
   push:
     branches: [main]
@@ -7,31 +7,57 @@ on:
 permissions:
   contents: write
 jobs:
-  decode:
+  inspect:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install QR tools
+      - name: Install QR tooling
         run: |
+          python -m pip install --quiet qrcode zxing-cpp pillow
           sudo apt-get update -qq
-          sudo apt-get install -y -qq librsvg2-bin zbar-tools
-      - name: Decode legacy QR files
+          sudo apt-get install -y -qq librsvg2-bin
+      - name: Inspect legacy QR01 and QR02
         run: |
-          set -e
-          : > legacy-qr-tokens.txt
-          for f in tmp-old-qr01.svg tmp-old-qr02.svg; do
-            png="/tmp/${f%.svg}.png"
-            rsvg-convert -w 1220 -h 1400 "$f" -o "$png"
-            token="$(zbarimg --quiet -Sqr.enable --raw "$png" | head -n1)"
-            test -n "$token"
-            printf '%s\t%s\n' "$f" "$token" >> legacy-qr-tokens.txt
-          done
-          cat legacy-qr-tokens.txt
-      - name: Commit decoded tokens
+          python - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          from PIL import Image
+          import zxingcpp, qrcode
+
+          def old_coords(path):
+              s=Path(path).read_text()
+              d=re.search(r'<path d="([^"]+)" fill="#101914"',s).group(1)
+              return {(int(x),int(y)) for x,y in re.findall(r'M(\d+),(\d+)',d)}
+
+          expected='RONAN-HUNT|STAGE-2|8D7K-PINE-42M'
+          qr=qrcode.QRCode(version=None,error_correction=qrcode.constants.ERROR_CORRECT_M,box_size=1,border=4)
+          qr.add_data(expected)
+          qr.make(fit=True)
+          matrix=qr.get_matrix()
+          generated={(x,y) for y,row in enumerate(matrix) for x,v in enumerate(row) if v}
+          legacy=old_coords('tmp-old-qr01.svg')
+          print('QR01 legacy matrix size:', max(max(x for x,y in legacy),max(y for x,y in legacy))+5)
+          print('QR01 exact expected-token matrix match:', legacy==generated)
+          print('QR01 legacy modules:',len(legacy),'expected modules:',len(generated))
+
+          out=[]
+          for f in ['tmp-old-qr01.svg','tmp-old-qr02.svg']:
+              png='/tmp/'+f.replace('.svg','.png')
+              subprocess.run(['rsvg-convert','-w','1220','-h','1400',f,'-o',png],check=True)
+              im=Image.open(png).crop((160,160,1060,1060)).resize((1800,1800))
+              code=zxingcpp.read_barcode(im)
+              val=code.text if code else ''
+              print(f,'ZXing decoded:',repr(val))
+              out.append(f+'\t'+val)
+          Path('legacy-qr-inspection.txt').write_text(
+              'qr01_expected_matrix_match='+str(legacy==generated)+'\n'+'\n'.join(out)+'\n'
+          )
+          PY
+      - name: Commit inspection
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add legacy-qr-tokens.txt
-          git commit -m "Decode legacy printed QR tokens"
+          git add legacy-qr-inspection.txt
+          git commit -m "Inspect legacy printed QR patterns"
           git push
