@@ -20,6 +20,7 @@
   <meta name="twitter:description" content="Private scavenger hunt" />
   <meta name="twitter:image" content="https://ronans-hunt.vercel.app/share-preview-v1.jpg?v=1" />
   <title>Ronan Hunt</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
       --ink: #0c1720;
@@ -842,6 +843,177 @@
       letter-spacing:.08em;
     }
 
+    .coordinate-chip{
+      width:min(100%,360px);
+      min-height:50px;
+      height:auto;
+      padding:10px 14px;
+      border-radius:16px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      background:rgba(244,240,231,.88);
+      color:#10212d;
+      border:1px solid rgba(255,255,255,.72);
+      box-shadow:0 8px 22px rgba(20,28,22,.14);
+      flex:none;
+    }
+    .coordinate-chip .coord-label{
+      font-size:9px;
+      font-weight:950;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:rgba(16,33,45,.5);
+    }
+    .coordinate-chip .coord-value{
+      font-size:14px;
+      font-weight:950;
+      letter-spacing:.035em;
+    }
+    .coordinate-chip.revealed .coord-value{color:#1d5f3a}
+    .coordinate-overlay{
+      position:absolute;
+      inset:0;
+      z-index:38;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:max(22px,env(safe-area-inset-top)) 18px max(22px,env(safe-area-inset-bottom));
+      background:rgba(7,16,22,.74);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+    .coordinate-overlay.open{display:flex;animation:rewardFade .25s ease both}
+    .coordinate-card{
+      position:relative;
+      width:min(100%,430px);
+      padding:26px 20px 20px;
+      border-radius:30px;
+      text-align:center;
+      color:#10212d;
+      background:#f4f0e7;
+      box-shadow:0 28px 90px rgba(0,0,0,.38);
+    }
+    .coordinate-close{
+      position:absolute;
+      top:12px;
+      right:12px;
+      width:42px;
+      height:42px;
+      flex:0 0 42px;
+      border-radius:14px;
+      background:rgba(16,33,45,.09);
+      color:#10212d;
+      box-shadow:none;
+      font-size:24px;
+    }
+    .coordinate-glyph{font-size:42px;line-height:1;margin:6px 0 10px}
+    .coordinate-card h3{margin:0;font-size:29px;letter-spacing:-.04em}
+    .coordinate-display{
+      margin:16px 0 10px;
+      padding:14px 12px;
+      border-radius:18px;
+      background:#fffdf7;
+      border:1px solid rgba(16,33,45,.1);
+      font-size:18px;
+      font-weight:950;
+      letter-spacing:.04em;
+      word-break:break-word;
+    }
+    .coordinate-copy{margin:10px auto 18px;max-width:350px;font-size:14px;line-height:1.5;font-weight:720;color:rgba(16,33,45,.68)}
+    .coordinate-use{
+      width:100%;
+      height:58px;
+      border-radius:20px;
+      padding:0 18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#10212d;
+      color:#fff;
+      font-size:15px;
+      font-weight:900;
+    }
+    .coordinate-use[hidden]{display:none}
+    .coordinate-need{margin:0;font-size:12px;font-weight:850;color:#8a2019}
+
+    .route-page{
+      position:absolute;
+      inset:0;
+      z-index:42;
+      display:none;
+      background:#e7eadf;
+      color:#10212d;
+    }
+    .route-page.open{display:block;animation:rewardFade .28s ease both}
+    .route-map{position:absolute;inset:0}
+    .route-topbar{
+      position:absolute;
+      z-index:1001;
+      top:max(12px,calc(env(safe-area-inset-top) + 6px));
+      left:12px;
+      right:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      pointer-events:none;
+    }
+    .route-title{
+      margin:0;
+      padding:10px 13px;
+      border-radius:15px;
+      background:rgba(244,240,231,.93);
+      box-shadow:0 8px 24px rgba(0,0,0,.15);
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      pointer-events:auto;
+    }
+    .route-close{
+      width:46px;
+      height:46px;
+      flex:0 0 46px;
+      border-radius:15px;
+      background:rgba(244,240,231,.94);
+      color:#10212d;
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
+      font-size:24px;
+      pointer-events:auto;
+    }
+    .route-panel{
+      position:absolute;
+      z-index:1001;
+      left:50%;
+      bottom:max(14px,calc(env(safe-area-inset-bottom) + 8px));
+      transform:translateX(-50%);
+      width:min(calc(100% - 24px),520px);
+      padding:14px;
+      border-radius:22px;
+      background:rgba(244,240,231,.96);
+      box-shadow:0 16px 46px rgba(0,0,0,.24);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+    }
+    .route-destination{margin:0 0 5px;font-size:13px;font-weight:950}
+    .route-status{margin:0;font-size:12px;line-height:1.4;font-weight:720;color:rgba(16,33,45,.66)}
+    .route-links{display:flex;gap:8px;margin-top:10px}
+    .route-link{
+      flex:1 1 0;
+      min-height:42px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      font-size:12px;
+      font-weight:900;
+      color:#fff;
+      background:#10212d;
+    }
+
     .chest-page{
       position:absolute;
       inset:0;
@@ -1080,6 +1252,10 @@
             </svg>
           </button>
           <p class="chest-message" id="chestMessage" aria-live="polite">Chest is locked. Find the key.</p>
+          <button class="coordinate-chip" id="introCoordinates" type="button" aria-label="Inspect scrambled coordinates">
+            <span class="coord-label">Scrambled Coordinates</span>
+            <span class="coord-value">53.54Δ86° N, 113.28Ω09° W</span>
+          </button>
           <button class="start-hunt" id="startHunt" type="button">
             <span>Take Me to the Hunt</span>
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1185,6 +1361,39 @@
           </svg>
         </button>
         <p class="main-chest-message" id="mainChestMessage" aria-live="polite">Chest is locked.</p>
+        <button class="coordinate-chip" id="mainCoordinates" type="button" aria-label="Inspect scrambled coordinates">
+          <span class="coord-label">Scrambled Coordinates</span>
+          <span class="coord-value">53.54Δ86° N, 113.28Ω09° W</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="coordinate-overlay" id="coordinateOverlay" aria-hidden="true" aria-label="Coordinates">
+      <div class="coordinate-card">
+        <button class="coordinate-close" id="coordinateClose" type="button" aria-label="Close coordinates">×</button>
+        <div class="coordinate-glyph" aria-hidden="true">⌖</div>
+        <p class="qr-reward-kicker">Chest Coordinates</p>
+        <h3 id="coordinateTitle">Scrambled Coordinates</h3>
+        <div class="coordinate-display" id="coordinateDisplay">53.54Δ86° N, 113.28Ω09° W</div>
+        <p class="coordinate-copy" id="coordinateCopy">These coordinates might point to the location of the key. I can't read them. I need to descramble them.</p>
+        <button class="coordinate-use" id="coordinateUse" type="button" hidden>Use the Descrambler</button>
+        <p class="coordinate-need" id="coordinateNeed">Find the Coordinate Descrambler first.</p>
+      </div>
+    </section>
+
+    <section class="route-page" id="routePage" aria-hidden="true" aria-label="Directions to the key">
+      <div id="routeMap" class="route-map"></div>
+      <div class="route-topbar">
+        <p class="route-title">Directions to the Key</p>
+        <button class="route-close" id="routeClose" type="button" aria-label="Close directions">×</button>
+      </div>
+      <div class="route-panel">
+        <p class="route-destination">53.54386° N, 113.28609° W</p>
+        <p class="route-status" id="routeStatus">Allow location access to build a live route. The route will update if you go the wrong way.</p>
+        <div class="route-links">
+          <a class="route-link" href="https://maps.apple.com/?daddr=53.54386,-113.28609&dirflg=d" target="_blank" rel="noopener">Apple Maps</a>
+          <a class="route-link" href="https://www.google.com/maps/dir/?api=1&destination=53.54386,-113.28609&travelmode=driving" target="_blank" rel="noopener">Google Maps</a>
+        </div>
       </div>
     </section>
 
@@ -1273,6 +1482,22 @@
       </div>
     </section>
 
+    <section class="qr-reward-overlay" id="qr3RewardOverlay" aria-hidden="true" aria-label="Coordinate Descrambler unlocked">
+      <div class="qr-reward-card">
+        <p class="qr-reward-kicker">Item Unlocked</p>
+        <h3>Coordinate Descrambler</h3>
+        <div class="analyzer-reward-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none"><path d="M12 18h40M12 32h40M12 46h40" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="22" cy="18" r="5" fill="currentColor"/><circle cx="43" cy="32" r="5" fill="currentColor"/><circle cx="30" cy="46" r="5" fill="currentColor"/></svg>
+        </div>
+        <div class="qr-reward-name">Coordinate Descrambler</div>
+        <p class="qr-reward-copy">Added to your inventory. It can decode scrambled coordinates connected to the chest.</p>
+        <button class="qr-reward-next" id="goToChestAfterQr3" type="button">
+          <span>Go to Chest</span>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
     <div class="scanner-overlay" id="scannerOverlay" aria-hidden="true">
       <section class="scanner-sheet" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
         <div class="scanner-head"><h2 class="scanner-title" id="scannerTitle">Scan hunt code</h2><button class="scanner-close" id="scannerClose" type="button" aria-label="Close scanner">×</button></div>
@@ -1314,6 +1539,7 @@
     </section>
   </main>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script>
     (() => {
