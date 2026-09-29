@@ -794,6 +794,13 @@
     .analyzer-photo-wrap{display:none;margin-top:16px}
     .analyzer-photo-wrap.show{display:block;animation:rewardFade .4s ease both}
     .analyzer-photo-label{margin:0 0 10px;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:rgba(16,33,45,.5)}
+    .analyzer-photo-stage{
+      position:relative;
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
     .analyzer-photo{
       width:100%;
       max-height:58dvh;
@@ -802,6 +809,37 @@
       display:block;
       background:#d8d8d2;
       box-shadow:0 14px 32px rgba(16,33,45,.16);
+    }
+    .analyzer-photo-nav{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      width:44px;
+      height:44px;
+      min-width:44px;
+      flex:0 0 44px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:rgba(10,22,29,.72);
+      color:white;
+      border:1px solid rgba(255,255,255,.35);
+      box-shadow:0 8px 22px rgba(0,0,0,.28);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      z-index:2;
+    }
+    .analyzer-photo-nav.prev{left:10px}
+    .analyzer-photo-nav.next{right:10px}
+    .analyzer-photo-nav svg{width:21px;height:21px}
+    .analyzer-photo-nav:active{transform:translateY(-50%) scale(.92)}
+    .analyzer-photo-counter{
+      margin:10px 0 0;
+      font-size:11px;
+      line-height:1;
+      font-weight:850;
+      color:rgba(16,33,45,.5);
+      letter-spacing:.08em;
     }
 
     .chest-page{
@@ -1100,8 +1138,17 @@
           <button class="arrived-btn" id="arrivedMaguire" type="button">I've Arrived at Maguire's House</button>
         </div>
         <div class="analyzer-photo-wrap" id="analyzerPhotoWrap">
-          <p class="analyzer-photo-label">Photo 1</p>
-          <img class="analyzer-photo" src="./analyzer-photo-01.jpg?v=1" alt="First photograph clue revealed by the photograph analyzer" />
+          <p class="analyzer-photo-label" id="analyzerPhotoLabel">Photo 1</p>
+          <div class="analyzer-photo-stage">
+            <button class="analyzer-photo-nav prev" id="analyzerPhotoPrev" type="button" aria-label="Previous photo">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <img class="analyzer-photo" id="analyzerPhotoImage" src="./analyzer-photo-01.jpg?v=2" alt="Photo 1 of 6 in the analyzed photograph clues" />
+            <button class="analyzer-photo-nav next" id="analyzerPhotoNext" type="button" aria-label="Next photo">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <p class="analyzer-photo-counter" id="analyzerPhotoCounter">1 / 6</p>
         </div>
       </div>
     </section>
@@ -1299,6 +1346,11 @@
       const analyzerIntro = document.getElementById('analyzerIntro');
       const arrivedMaguire = document.getElementById('arrivedMaguire');
       const analyzerPhotoWrap = document.getElementById('analyzerPhotoWrap');
+      const analyzerPhotoLabel = document.getElementById('analyzerPhotoLabel');
+      const analyzerPhotoImage = document.getElementById('analyzerPhotoImage');
+      const analyzerPhotoPrev = document.getElementById('analyzerPhotoPrev');
+      const analyzerPhotoNext = document.getElementById('analyzerPhotoNext');
+      const analyzerPhotoCounter = document.getElementById('analyzerPhotoCounter');
       const chestBtn = document.getElementById('chestBtn');
       const chestPage = document.getElementById('chestPage');
       const mainChest = document.getElementById('mainChest');
@@ -1337,6 +1389,15 @@
       const QR2_TOKEN = 'RONAN-HUNT|STAGE-3|SHED-02|PHOTO-ANALYZER-7K4M';
       const params = new URLSearchParams(location.search);
       const resumeQr1 = params.get('resume') === 'qr1';
+      const ANALYZER_PHOTOS = [
+        './analyzer-photo-01.jpg?v=2',
+        './analyzer-photo-02.jpg?v=1',
+        './analyzer-photo-03.jpg?v=1',
+        './analyzer-photo-04.jpg?v=1',
+        './analyzer-photo-05.jpg?v=1',
+        './analyzer-photo-06.jpg?v=1'
+      ];
+      let analyzerPhotoIndex = 0;
       let unlocked = false;
       let activeClue = 1;
       let qrScanner = null;
@@ -2150,6 +2211,21 @@
         }
       }
 
+      function showAnalyzerPhoto(index){
+        const total=ANALYZER_PHOTOS.length;
+        analyzerPhotoIndex=((index%total)+total)%total;
+        const number=analyzerPhotoIndex+1;
+        analyzerPhotoImage.src=ANALYZER_PHOTOS[analyzerPhotoIndex];
+        analyzerPhotoImage.alt=`Photo ${number} of ${total} in the analyzed photograph clues`;
+        analyzerPhotoLabel.textContent=`Photo ${number}`;
+        analyzerPhotoCounter.textContent=`${number} / ${total}`;
+      }
+
+      ANALYZER_PHOTOS.slice(1).forEach(src=>{
+        const img=new Image();
+        img.src=src;
+      });
+
       findNextCoin.addEventListener('click',()=>{
         qrRewardOverlay.classList.remove('open');
         qrRewardOverlay.setAttribute('aria-hidden','true');
@@ -2166,6 +2242,8 @@
         itemDetailOverlay.setAttribute('aria-hidden','true');
         analyzerIntro.style.display='block';
         analyzerPhotoWrap.classList.remove('show');
+        analyzerPhotoIndex=0;
+        showAnalyzerPhoto(0);
         analyzerClueOverlay.classList.add('open');
         analyzerClueOverlay.setAttribute('aria-hidden','false');
       });
@@ -2177,7 +2255,16 @@
 
       arrivedMaguire.addEventListener('click',()=>{
         analyzerIntro.style.display='none';
+        showAnalyzerPhoto(0);
         analyzerPhotoWrap.classList.add('show');
+      });
+
+      analyzerPhotoPrev.addEventListener('click',()=>{
+        showAnalyzerPhoto(analyzerPhotoIndex-1);
+      });
+
+      analyzerPhotoNext.addEventListener('click',()=>{
+        showAnalyzerPhoto(analyzerPhotoIndex+1);
       });
 
       openAnalyzerInventory.addEventListener('click',()=>{
