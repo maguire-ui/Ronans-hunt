@@ -2106,6 +2106,17 @@
         qr3RewardOverlay.setAttribute('aria-hidden','false');
       }
 
+      function showQr4Reward(){
+        unlockInventoryItem({
+          id:'golden-key',
+          name:'Golden Key',
+          icon:'🗝️',
+          description:'A golden key that looks like it belongs to the locked chest.'
+        });
+        qr4RewardOverlay.classList.add('open');
+        qr4RewardOverlay.setAttribute('aria-hidden','false');
+      }
+
       function runQrSequence() {
         activeClue = 2;
         prepQrMapZoom();
@@ -2452,9 +2463,12 @@
 
       function startLegacyQr2Fallback(){
         stopLegacyQr2Fallback();
-        if(activeClue!==2&&activeClue!==3)return;
+        if(activeClue!==2&&activeClue!==3&&activeClue!==4)return;
         const stageAtStart=activeClue;
-        activeLegacyMatrix=stageAtStart===3?LEGACY_QR3_MATRIX:LEGACY_QR2_MATRIX;
+        activeLegacyMatrix=
+          stageAtStart===4?LEGACY_QR4_MATRIX:
+          stageAtStart===3?LEGACY_QR3_MATRIX:
+          LEGACY_QR2_MATRIX;
         legacyQr2Timer=setInterval(()=>{
           if(qrSolved||activeClue!==stageAtStart){
             stopLegacyQr2Fallback();
@@ -2464,7 +2478,11 @@
           try{
             if(legacyQr2FrameMatches(video)){
               stopLegacyQr2Fallback();
-              unlockFromQr(stageAtStart===3?'__RONAN_LEGACY_QR03_VISUAL__':'__RONAN_LEGACY_QR02_VISUAL__');
+              const visualKey=
+                stageAtStart===4?'__RONAN_LEGACY_QR04_VISUAL__':
+                stageAtStart===3?'__RONAN_LEGACY_QR03_VISUAL__':
+                '__RONAN_LEGACY_QR02_VISUAL__';
+              unlockFromQr(visualKey);
             }
           }catch(_){}
         },450);
@@ -2490,6 +2508,11 @@
           analyzerPhotoWrap.classList.add('show');
           analyzerClueOverlay.classList.add('open');
           analyzerClueOverlay.setAttribute('aria-hidden','false');
+        }else if(scannerReturnToRoute&&!qrSolved){
+          scannerReturnToRoute=false;
+          routePage.classList.add('open');
+          routePage.setAttribute('aria-hidden','false');
+          setTimeout(beginLiveNavigation,80);
         }
       }
       function unlockFromQr(decodedText){
@@ -2498,7 +2521,12 @@
         // The QR we expect is based on the clue currently on screen, not stale
         // saved progress. This keeps the hunt reliable during reloads and testing.
         const stage=activeClue;
-        const expected=stage===1?QR1_TOKEN:(stage===2?QR2_TOKEN:(stage===3?QR3_TOKEN:null));
+        const expected=
+          stage===1?QR1_TOKEN:
+          stage===2?QR2_TOKEN:
+          stage===3?QR3_TOKEN:
+          stage===4?QR4_TOKEN:
+          null;
         if(!expected){
           scanStatus.className='scan-status error';
           scanStatus.textContent='The next hunt code is not active yet.';
@@ -2507,9 +2535,10 @@
         const decoded=(decodedText||'').trim();
         const legacyVisual=
           (stage===2&&decoded==='__RONAN_LEGACY_QR02_VISUAL__') ||
-          (stage===3&&decoded==='__RONAN_LEGACY_QR03_VISUAL__');
+          (stage===3&&decoded==='__RONAN_LEGACY_QR03_VISUAL__') ||
+          (stage===4&&decoded==='__RONAN_LEGACY_QR04_VISUAL__');
         if(decoded!==expected&&!legacyVisual){
-          if(stage===2||stage===3){
+          if(stage===2||stage===3||stage===4){
             scanStatus.className='scan-status';
             scanStatus.textContent=`QR detected — checking QR 0${stage}…`;
           }else{
@@ -2524,6 +2553,7 @@
         // stop() can finish, which leaves the green detection box frozen forever.
         qrSolved=true;
         scannerReturnToAnalyzer=false;
+        scannerReturnToRoute=false;
         stopLegacyQr2Fallback();
         try{
           if(qrScanner&&scannerRunning&&typeof qrScanner.pause==='function')qrScanner.pause(true);
@@ -2550,6 +2580,12 @@
           scanStatus.className='scan-status success';
           scanStatus.textContent='Code accepted — item unlocked.';
           showQr3Reward();
+        }else if(stage===4){
+          localStorage.setItem(PROGRESS_KEY,String(Math.max(currentProgress(),5)));
+          activeClue=5;
+          scanStatus.className='scan-status success';
+          scanStatus.textContent='Code accepted — key unlocked.';
+          showQr4Reward();
         }
 
         // Shut the camera down after the UI has already advanced.
@@ -2588,7 +2624,7 @@
           ()=>{}
         );
         scannerRunning=true;
-        if(activeClue===2||activeClue===3)startLegacyQr2Fallback();
+        if(activeClue===2||activeClue===3||activeClue===4)startLegacyQr2Fallback();
 
         // A very fast decode can happen before start() resolves. If it did,
         // immediately stop the now-started camera instead of leaving it hidden.
@@ -2599,7 +2635,7 @@
         }
 
         scanStatus.className='scan-status';
-        scanStatus.textContent=(activeClue===2||activeClue===3)
+        scanStatus.textContent=(activeClue===2||activeClue===3||activeClue===4)
           ? `Point the camera at QR 0${activeClue} and hold it steady inside the box.`
           : 'Point the camera at the Ronan Hunt QR code.';
         return true;
@@ -2956,6 +2992,29 @@
 
       routeClose.addEventListener('click',closeRoutePage);
 
+      routeScanQr4.addEventListener('click',()=>{
+        closeRoutePage();
+        activeClue=4;
+        scannerReturnToRoute=true;
+        openScanner();
+      });
+
+      goToChestAfterQr4.addEventListener('click',()=>{
+        qr4RewardOverlay.classList.remove('open');
+        qr4RewardOverlay.setAttribute('aria-hidden','true');
+        chestPage.classList.add('open');
+        chestPage.setAttribute('aria-hidden','false');
+        chestBtn.classList.add('active');
+        mainChestMessage.classList.remove('show');
+      });
+
+      finalRewardClose.addEventListener('click',()=>{
+        finalRewardPage.classList.remove('open');
+        finalRewardPage.setAttribute('aria-hidden','true');
+        chestPage.classList.add('open');
+        chestPage.setAttribute('aria-hidden','false');
+      });
+
       inventoryBtn.addEventListener('click',()=>{
         const opening=!inventoryPanel.classList.contains('open');
         inventoryPanel.classList.toggle('open',opening);
@@ -2981,9 +3040,39 @@
       });
 
       mainChest.addEventListener('click',()=>{
+        if(chestOpened){
+          finalRewardPage.classList.add('open');
+          finalRewardPage.setAttribute('aria-hidden','false');
+          return;
+        }
+
+        if(hasInventoryItem('golden-key')){
+          chestOpened=true;
+          mainChestMessage.classList.remove('show');
+          mainCoordinates.style.display='none';
+
+          goldenKeyAnimation.classList.remove('play');
+          mainChest.classList.remove('opened','denied');
+          void goldenKeyAnimation.offsetWidth;
+          goldenKeyAnimation.classList.add('play');
+
+          setTimeout(()=>{
+            mainChest.classList.add('opened');
+          },1180);
+
+          setTimeout(()=>{
+            chestPage.classList.remove('open');
+            chestPage.setAttribute('aria-hidden','true');
+            finalRewardPage.classList.add('open');
+            finalRewardPage.setAttribute('aria-hidden','false');
+          },1900);
+          return;
+        }
+
         mainChest.classList.remove('denied');
         void mainChest.offsetWidth;
         mainChest.classList.add('denied');
+        mainChestMessage.textContent='Chest is locked.';
         mainChestMessage.classList.add('show');
       });
 
