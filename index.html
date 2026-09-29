@@ -720,7 +720,7 @@
       color:rgba(16,33,45,.58);
     }
 
-    .item-detail-overlay,.analyzer-clue-overlay{
+    .item-detail-overlay{
       position:absolute;
       inset:0;
       z-index:36;
@@ -732,8 +732,8 @@
       backdrop-filter:blur(18px);
       -webkit-backdrop-filter:blur(18px);
     }
-    .item-detail-overlay.open,.analyzer-clue-overlay.open{display:flex;animation:rewardFade .25s ease both}
-    .item-detail-card,.analyzer-clue-card{
+    .item-detail-overlay.open{display:flex;animation:rewardFade .25s ease both}
+    .item-detail-card{
       position:relative;
       width:min(100%,450px);
       max-height:min(90dvh,760px);
@@ -746,6 +746,31 @@
       border:1px solid rgba(255,255,255,.75);
       box-shadow:0 28px 90px rgba(0,0,0,.38);
       animation:rewardPop .36s cubic-bezier(.2,.9,.25,1) both;
+    }
+
+    .analyzer-clue-overlay{
+      position:absolute;
+      inset:0;
+      z-index:36;
+      display:none;
+      overflow:auto;
+      background:
+        radial-gradient(circle at 50% 10%,rgba(255,255,255,.92),transparent 28%),
+        linear-gradient(180deg,#eef0dc 0%,#dce3c7 52%,#c0cc9e 100%);
+      color:#10212d;
+    }
+    .analyzer-clue-overlay.open{display:block;animation:introReveal .38s ease both}
+    .analyzer-clue-card{
+      position:relative;
+      min-height:100%;
+      width:min(100%,760px);
+      margin:0 auto;
+      padding:max(74px,calc(env(safe-area-inset-top) + 58px)) 18px max(28px,calc(env(safe-area-inset-bottom) + 18px));
+      text-align:center;
+      color:#10212d;
+      background:transparent;
+      border:0;
+      box-shadow:none;
     }
     .item-detail-close,.analyzer-clue-close{
       position:absolute;
@@ -842,6 +867,24 @@
       color:rgba(16,33,45,.5);
       letter-spacing:.08em;
     }
+    .analyzer-final-scan{
+      width:min(100%,420px);
+      height:58px;
+      margin:18px auto 0;
+      padding:0 20px;
+      border-radius:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      background:#10212d;
+      color:white;
+      font-size:16px;
+      font-weight:900;
+      box-shadow:0 14px 32px rgba(15,30,40,.2);
+    }
+    .analyzer-final-scan[hidden]{display:none}
+    .analyzer-final-scan svg{width:21px;height:21px}
 
     .coordinate-chip{
       width:min(100%,360px);
@@ -1325,6 +1368,10 @@
             </button>
           </div>
           <p class="analyzer-photo-counter" id="analyzerPhotoCounter">1 / 6</p>
+          <button class="analyzer-final-scan" id="analyzerScanQr3" type="button" hidden>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 8h3v3H8V8Zm5 0h3v3h-3V8Zm-5 5h3v3H8v-3Zm5 0h1.5v1.5H13V13Zm2 2h1v1h-1v-1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Scan QR Code</span>
+          </button>
         </div>
       </div>
     </section>
@@ -1578,6 +1625,7 @@
       const analyzerPhotoPrev = document.getElementById('analyzerPhotoPrev');
       const analyzerPhotoNext = document.getElementById('analyzerPhotoNext');
       const analyzerPhotoCounter = document.getElementById('analyzerPhotoCounter');
+      const analyzerScanQr3 = document.getElementById('analyzerScanQr3');
       const chestBtn = document.getElementById('chestBtn');
       const chestPage = document.getElementById('chestPage');
       const mainChest = document.getElementById('mainChest');
@@ -1641,6 +1689,7 @@
         './analyzer-photo-06.jpg?v=1'
       ];
       let analyzerPhotoIndex = 0;
+      let scannerReturnToAnalyzer = false;
       let unlocked = false;
       let activeClue = 1;
       let qrScanner = null;
@@ -2282,6 +2331,15 @@
         scannerOverlay.setAttribute('aria-hidden','true');
         scanStatus.className='scan-status';
         scanStatus.textContent='Point the camera at the Ronan Hunt QR code.';
+
+        if(scannerReturnToAnalyzer&&!qrSolved){
+          scannerReturnToAnalyzer=false;
+          showAnalyzerPhoto(ANALYZER_PHOTOS.length-1);
+          analyzerIntro.style.display='none';
+          analyzerPhotoWrap.classList.add('show');
+          analyzerClueOverlay.classList.add('open');
+          analyzerClueOverlay.setAttribute('aria-hidden','false');
+        }
       }
       function unlockFromQr(decodedText){
         if(qrSolved)return;
@@ -2314,6 +2372,7 @@
         // browsers/html5-qrcode builds wait for the callback to finish before
         // stop() can finish, which leaves the green detection box frozen forever.
         qrSolved=true;
+        scannerReturnToAnalyzer=false;
         stopLegacyQr2Fallback();
         try{
           if(qrScanner&&scannerRunning&&typeof qrScanner.pause==='function')qrScanner.pause(true);
@@ -2643,6 +2702,7 @@
         analyzerPhotoImage.alt=`Photo ${number} of ${total} in the analyzed photograph clues`;
         analyzerPhotoLabel.textContent=`Photo ${number}`;
         analyzerPhotoCounter.textContent=`${number} / ${total}`;
+        analyzerScanQr3.hidden=analyzerPhotoIndex!==total-1;
       }
 
       ANALYZER_PHOTOS.slice(1).forEach(src=>{
@@ -2664,6 +2724,7 @@
       useAnalyzerBtn.addEventListener('click',()=>{
         itemDetailOverlay.classList.remove('open');
         itemDetailOverlay.setAttribute('aria-hidden','true');
+        mapActions.classList.remove('show');
         analyzerIntro.style.display='block';
         analyzerPhotoWrap.classList.remove('show');
         analyzerPhotoIndex=0;
@@ -2675,10 +2736,7 @@
       analyzerClueClose.addEventListener('click',()=>{
         analyzerClueOverlay.classList.remove('open');
         analyzerClueOverlay.setAttribute('aria-hidden','true');
-        if(activeClue>=3){
-          updateScanButton();
-          mapActions.classList.add('show');
-        }
+        mapActions.classList.remove('show');
       });
 
       arrivedMaguire.addEventListener('click',()=>{
@@ -2693,6 +2751,13 @@
 
       analyzerPhotoNext.addEventListener('click',()=>{
         showAnalyzerPhoto(analyzerPhotoIndex+1);
+      });
+
+      analyzerScanQr3.addEventListener('click',()=>{
+        scannerReturnToAnalyzer=true;
+        analyzerClueOverlay.classList.remove('open');
+        analyzerClueOverlay.setAttribute('aria-hidden','true');
+        openScanner();
       });
 
       openAnalyzerInventory.addEventListener('click',()=>{
