@@ -44,6 +44,9 @@ jobs:
                   check=True
               )
               img=Image.open(png)
+              # The QR panel is the 45x45 square beginning at 8,8 in a 61x70 sticker.
+              # Crop to the actual QR area so decorative text never affects decoding.
+              img=img.crop((160,160,1060,1060)).resize((1800,1800))
               code=zxingcpp.read_barcode(img)
               decoded=code.text if code else ""
               if decoded != expected:
