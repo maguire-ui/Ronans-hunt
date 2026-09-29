@@ -37,4 +37,6 @@ jobs:
           grep -q "__RONAN_LEGACY_QR02_VISUAL__" index.html
           grep -q "LEGACY_QR3_MATRIX" index.html
           grep -q "__RONAN_LEGACY_QR03_VISUAL__" index.html
+          grep -q "LEGACY_QR4_MATRIX" index.html
+          grep -q "__RONAN_LEGACY_QR04_VISUAL__" index.html
           echo "Original printed QR artwork is locked and QR02 fallback is present."
