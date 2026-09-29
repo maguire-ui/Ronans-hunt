@@ -1552,6 +1552,7 @@
       const huntIntro = document.getElementById('huntIntro');
       const introChest = document.getElementById('introChest');
       const chestMessage = document.getElementById('chestMessage');
+      const introCoordinates = document.getElementById('introCoordinates');
       const startHunt = document.getElementById('startHunt');
       const topTools = document.getElementById('topTools');
       const inventoryBtn = document.getElementById('inventoryBtn');
@@ -1581,6 +1582,18 @@
       const chestPage = document.getElementById('chestPage');
       const mainChest = document.getElementById('mainChest');
       const mainChestMessage = document.getElementById('mainChestMessage');
+      const mainCoordinates = document.getElementById('mainCoordinates');
+      const coordinateOverlay = document.getElementById('coordinateOverlay');
+      const coordinateClose = document.getElementById('coordinateClose');
+      const coordinateTitle = document.getElementById('coordinateTitle');
+      const coordinateDisplay = document.getElementById('coordinateDisplay');
+      const coordinateCopy = document.getElementById('coordinateCopy');
+      const coordinateUse = document.getElementById('coordinateUse');
+      const coordinateNeed = document.getElementById('coordinateNeed');
+      const routePage = document.getElementById('routePage');
+      const routeMapEl = document.getElementById('routeMap');
+      const routeClose = document.getElementById('routeClose');
+      const routeStatus = document.getElementById('routeStatus');
       const mapActions = document.getElementById('mapActions');
       const localizeCta = document.getElementById('localizeCta');
       const scanCta = document.getElementById('scanCta');
@@ -1593,6 +1606,8 @@
       const findNextCoin = document.getElementById('findNextCoin');
       const qr2RewardOverlay = document.getElementById('qr2RewardOverlay');
       const openAnalyzerInventory = document.getElementById('openAnalyzerInventory');
+      const qr3RewardOverlay = document.getElementById('qr3RewardOverlay');
+      const goToChestAfterQr3 = document.getElementById('goToChestAfterQr3');
       const scannerOverlay = document.getElementById('scannerOverlay');
       const scannerClose = document.getElementById('scannerClose');
       const scanStatus = document.getElementById('scanStatus');
@@ -1613,6 +1628,8 @@
       const INVENTORY_KEY = 'ronanHuntInventoryV1';
       const QR1_TOKEN = 'RONAN-HUNT|STAGE-2|8D7K-PINE-42M';
       const QR2_TOKEN = 'RONAN-HUNT|STAGE-3|SHED-02|PHOTO-ANALYZER-7K4M';
+      const QR3_TOKEN = 'RONAN-HUNT|STAGE-4|RESERVED-03|Q3-4N7P';
+      const DESTINATION = {lat:53.54386,lng:-113.28609};
       const params = new URLSearchParams(location.search);
       const resumeQr1 = params.get('resume') === 'qr1';
       const ANALYZER_PHOTOS = [
@@ -1629,9 +1646,20 @@
       let qrScanner = null;
       let scannerRunning = false;
       let qrSolved = false;
+      let coordinatesDescrambled = false;
+      let routeMap = null;
+      let routeLine = null;
+      let routeUserMarker = null;
+      let routeDestinationMarker = null;
+      let routeWatchId = null;
+      let lastRoutePosition = null;
+      let lastRouteAt = 0;
+      let routeFetchBusy = false;
       let legacyQr2Timer = null;
       let legacyQr2Canvas = null;
+      let activeLegacyMatrix = null;
       const LEGACY_QR2_MATRIX = ["0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000111111101100111100101011111110000","0000100000101111001011001010000010000","0000101110101101001010101010111010000","0000101110101010111110101010111010000","0000101110101000100010101010111010000","0000100000100111110010001010000010000","0000111111101010101010101011111110000","0000000000001010111111101000000000000","0000110111101101011010110110001010000","0000101010110110110001011001110000000","0000111101101010001100101100111110000","0000001110001010101011101010100000000","0000010101001110111100011001011010000","0000110010110101000010111010100100000","0000101011001001110010010111011000000","0000110010101100101111010001010010000","0000100101011011001010101010101000000","0000010111010010001011010101001010000","0000101100101100101100100101010100000","0000100010011011011011101011011010000","0000111011110100111010101010010100000","0000000000001011001010011001011000000","0000111111101001011110111010101000000","0000100000101011001001011010010110000","0000101110100110111110001101001000000","0000101110101000100110110100100100000","0000101110100011011101001010001010000","0000100000101110110110010101100010000","0000111111101001101001101100010110000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000"];
+      const LEGACY_QR3_MATRIX = ["0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000111111101110011101001011111110000","0000100000100010100100101010000010000","0000101110101010110001111010111010000","0000101110100011000111001010111010000","0000101110100001000110110010111010000","0000100000101110011010101010000010000","0000111111101010101010101011111110000","0000000000000110010000111000000000000","0000101000110011110111010001001010000","0000010101010100000010010101000000000","0000111110100010011010111010001010000","0000011001010101101110111000010010000","0000101011110100111011001010111000000","0000000110011011011000001001011000000","0000101001101001100111011111110010000","0000110100001011010100101101100110000","0000101011111001010101000010010000000","0000010101001100100100011001011000000","0000111000110111011101010011101010000","0000000111000001101100010111010010000","0000110111101000011011011111111110000","0000000000001110111010011000101100000","0000111111101011100111101010111010000","0000100000100001010000101000110100000","0000101110100111010001011111101110000","0000101110100111100100110101010010000","0000101110101110000100100110101110000","0000100000100101011010001100110000000","0000111111101101111010111010011010000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000"];
       let inventoryItems = [];
 
       function loadInventory(){
