@@ -1647,8 +1647,11 @@
       }
       async function unlockFromQr(decodedText){
         if(qrSolved)return;
-        const progress=currentProgress();
-        const expected=progress<=1?QR1_TOKEN:(progress===2?QR2_TOKEN:null);
+
+        // The QR we expect is based on the clue currently on screen, not stale
+        // saved progress. This keeps the hunt reliable during reloads and testing.
+        const stage=activeClue;
+        const expected=stage===1?QR1_TOKEN:(stage===2?QR2_TOKEN:null);
         if(!expected){
           scanStatus.className='scan-status error';
           scanStatus.textContent='The next hunt code is not active yet.';
@@ -1656,22 +1659,23 @@
         }
         if((decodedText||'').trim()!==expected){
           scanStatus.className='scan-status error';
-          scanStatus.textContent='That is not the next Ronan Hunt code.';
+          scanStatus.textContent='That is not the QR code for this clue.';
           return;
         }
+
         qrSolved=true;
         await stopScanner();
         scannerOverlay.classList.remove('open');
         scannerOverlay.setAttribute('aria-hidden','true');
         mapActions.classList.remove('show');
 
-        if(progress<=1){
-          localStorage.setItem(PROGRESS_KEY,'2');
+        if(stage===1){
+          localStorage.setItem(PROGRESS_KEY,String(Math.max(currentProgress(),2)));
           scanStatus.className='scan-status success';
           scanStatus.textContent='Code accepted — map unlocked.';
           showQr1Reward();
-        }else{
-          localStorage.setItem(PROGRESS_KEY,'3');
+        }else if(stage===2){
+          localStorage.setItem(PROGRESS_KEY,String(Math.max(currentProgress(),3)));
           scanStatus.className='scan-status success';
           scanStatus.textContent='Code accepted — item unlocked.';
           showQr2Reward();
