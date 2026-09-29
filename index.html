@@ -1040,6 +1040,24 @@
       letter-spacing:-.045em;
       text-shadow:0 5px 28px rgba(0,0,0,.55);
     }
+    .coin-found-map-btn{
+      width:min(100%,360px);
+      height:56px;
+      margin:18px auto 0;
+      padding:0 20px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      background:rgba(255,255,255,.95);
+      color:#10212d;
+      font-size:15px;
+      font-weight:950;
+      box-shadow:0 12px 30px rgba(0,0,0,.3);
+    }
+    .coin-found-map-btn svg{width:20px;height:20px}
+    .coin-found-map-btn:active{transform:scale(.97)}
 
     .route-page{
       position:absolute;
@@ -1603,6 +1621,13 @@
       <div class="coin-found-copy">
         <p class="coin-found-kicker">Fourth Coin</p>
         <p class="coin-found-title">The fourth coin has been found. Now you just need to get it.</p>
+        <button class="coin-found-map-btn" id="coinFoundGoMap" type="button">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 6.5 9 4l6 2.5L20 4v13.5L15 20l-6-2.5L4 20V6.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M9 4v13.5M15 6.5V20" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+          <span>Go to Map</span>
+        </button>
       </div>
     </section>
 
@@ -1851,6 +1876,7 @@
       const coordinateUse = document.getElementById('coordinateUse');
       const coordinateNeed = document.getElementById('coordinateNeed');
       const coinFoundPage = document.getElementById('coinFoundPage');
+      const coinFoundGoMap = document.getElementById('coinFoundGoMap');
       const routePage = document.getElementById('routePage');
       const routeMapEl = document.getElementById('routeMap');
       const routeClose = document.getElementById('routeClose');
@@ -2949,11 +2975,6 @@
         coinFoundPage.classList.remove('leaving');
         coinFoundPage.classList.add('open');
         coinFoundPage.setAttribute('aria-hidden','false');
-
-        setTimeout(()=>{
-          coinFoundPage.classList.add('leaving');
-          setTimeout(openRoutePage,620);
-        },2400);
       }
 
       function closeRoutePage(){
@@ -3072,6 +3093,11 @@
         coordinateUse.hidden=true;
         coordinateNeed.hidden=true;
         setTimeout(showFourthCoinFound,500);
+      });
+
+      coinFoundGoMap.addEventListener('click',()=>{
+        coinFoundPage.classList.add('leaving');
+        setTimeout(openRoutePage,620);
       });
 
       routeClose.addEventListener('click',closeRoutePage);
