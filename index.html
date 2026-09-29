@@ -1342,6 +1342,9 @@
       let qrScanner = null;
       let scannerRunning = false;
       let qrSolved = false;
+      let legacyQr2Timer = null;
+      let legacyQr2Canvas = null;
+      const LEGACY_QR2_MATRIX = ["0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000111111101100111100101011111110000","0000100000101111001011001010000010000","0000101110101101001010101010111010000","0000101110101010111110101010111010000","0000101110101000100010101010111010000","0000100000100111110010001010000010000","0000111111101010101010101011111110000","0000000000001010111111101000000000000","0000110111101101011010110110001010000","0000101010110110110001011001110000000","0000111101101010001100101100111110000","0000001110001010101011101010100000000","0000010101001110111100011001011010000","0000110010110101000010111010100100000","0000101011001001110010010111011000000","0000110010101100101111010001010010000","0000100101011011001010101010101000000","0000010111010010001011010101001010000","0000101100101100101100100101010100000","0000100010011011011011101011011010000","0000111011110100111010101010010100000","0000000000001011001010011001011000000","0000111111101001011110111010101000000","0000100000101011001001011010010110000","0000101110100110111110001101001000000","0000101110101000100110110100100100000","0000101110100011011101001010001010000","0000100000101110110110010101100010000","0000111111101001101001101100010110000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000","0000000000000000000000000000000000000"];
       let inventoryItems = [];
 
       function loadInventory(){
@@ -1633,7 +1636,115 @@
         scanCtaText.textContent='Scan QR Code';
         scanCta.setAttribute('aria-label','Scan the next hunt QR code');
       }
+      function stopLegacyQr2Fallback(){
+        if(legacyQr2Timer){
+          clearInterval(legacyQr2Timer);
+          legacyQr2Timer=null;
+        }
+      }
+
+      function legacyQr2Expected(row,col,rotation){
+        const n=LEGACY_QR2_MATRIX.length;
+        let r=row,c=col;
+        if(rotation===1){r=n-1-col;c=row;}
+        else if(rotation===2){r=n-1-row;c=n-1-col;}
+        else if(rotation===3){r=col;c=n-1-row;}
+        return LEGACY_QR2_MATRIX[r][c]==='1';
+      }
+
+      function legacyQr2FrameMatches(video){
+        if(!video||video.readyState<2||!video.videoWidth||!video.videoHeight)return false;
+
+        if(!legacyQr2Canvas){
+          legacyQr2Canvas=document.createElement('canvas');
+          legacyQr2Canvas.width=240;
+          legacyQr2Canvas.height=240;
+        }
+        const canvas=legacyQr2Canvas;
+        const ctx=canvas.getContext('2d',{willReadFrequently:true});
+        if(!ctx)return false;
+
+        const vw=video.videoWidth,vh=video.videoHeight;
+        const sourceSide=Math.min(vw,vh);
+        const sx=(vw-sourceSide)/2;
+        const sy=(vh-sourceSide)/2;
+        ctx.drawImage(video,sx,sy,sourceSide,sourceSide,0,0,240,240);
+
+        const image=ctx.getImageData(0,0,240,240).data;
+        const gray=(x,y)=>{
+          x=Math.max(0,Math.min(239,Math.round(x)));
+          y=Math.max(0,Math.min(239,Math.round(y)));
+          const i=(y*240+x)*4;
+          return image[i]*.299+image[i+1]*.587+image[i+2]*.114;
+        };
+
+        const n=37;
+        const scales=[.30,.36,.42,.48,.54,.60,.66,.72,.78,.84,.90];
+        const offsets=[-.10,0,.10];
+
+        for(const scale of scales){
+          const side=240*scale;
+          const cell=side/n;
+          for(const oy of offsets){
+            for(const ox of offsets){
+              const left=120-side/2+ox*side;
+              const top=120-side/2+oy*side;
+              if(left<0||top<0||left+side>240||top+side>240)continue;
+
+              const samples=[];
+              const points=[];
+              for(let r=0;r<n;r++){
+                for(let c=0;c<n;c++){
+                  // Half the modules is plenty for a unique fingerprint and keeps this light.
+                  if(((r+c)&1)!==0)continue;
+                  const x=left+(c+.5)*cell;
+                  const y=top+(r+.5)*cell;
+                  const g=(gray(x,y)+gray(x-cell*.16,y)+gray(x+cell*.16,y)+gray(x,y-cell*.16)+gray(x,y+cell*.16))/5;
+                  samples.push(g);
+                  points.push([r,c,g]);
+                }
+              }
+
+              const sorted=samples.slice().sort((a,b)=>a-b);
+              const low=sorted[Math.floor(sorted.length*.12)];
+              const high=sorted[Math.floor(sorted.length*.88)];
+              if(high-low<72)continue;
+              const threshold=(low+high)/2;
+
+              for(let rotation=0;rotation<4;rotation++){
+                let errors=0;
+                for(const [r,c,g] of points){
+                  const seenBlack=g<threshold;
+                  if(seenBlack!==legacyQr2Expected(r,c,rotation))errors++;
+                }
+                if(errors/points.length<.145)return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      function startLegacyQr2Fallback(){
+        stopLegacyQr2Fallback();
+        if(activeClue!==2)return;
+        legacyQr2Timer=setInterval(()=>{
+          if(qrSolved||activeClue!==2){
+            stopLegacyQr2Fallback();
+            return;
+          }
+          const video=document.querySelector('#qr-reader video');
+          try{
+            if(legacyQr2FrameMatches(video)){
+              stopLegacyQr2Fallback();
+              unlockFromQr('__RONAN_LEGACY_QR02_VISUAL__');
+            }
+          }catch(_){}
+        },450);
+      }
+
       async function stopScanner(){
+        stopLegacyQr2Fallback();
         if(!qrScanner||!scannerRunning)return;
         try{await qrScanner.stop();}catch(_){}
         scannerRunning=false;
@@ -1657,9 +1768,19 @@
           scanStatus.textContent='The next hunt code is not active yet.';
           return;
         }
-        if((decodedText||'').trim()!==expected){
-          scanStatus.className='scan-status error';
-          scanStatus.textContent='That is not the QR code for this clue.';
+        const decoded=(decodedText||'').trim();
+        const legacyQr2Visual=stage===2&&decoded==='__RONAN_LEGACY_QR02_VISUAL__';
+        if(decoded!==expected&&!legacyQr2Visual){
+          if(stage===2){
+            // The original printed QR 02 has a legacy matrix that some QR
+            // decoders can locate but cannot decode. Keep scanning while the
+            // visual fingerprint fallback checks the exact printed pattern.
+            scanStatus.className='scan-status';
+            scanStatus.textContent='QR detected — checking QR 02…';
+          }else{
+            scanStatus.className='scan-status error';
+            scanStatus.textContent='That is not the QR code for this clue.';
+          }
           return;
         }
 
@@ -1667,6 +1788,7 @@
         // browsers/html5-qrcode builds wait for the callback to finish before
         // stop() can finish, which leaves the green detection box frozen forever.
         qrSolved=true;
+        stopLegacyQr2Fallback();
         try{
           if(qrScanner&&scannerRunning&&typeof qrScanner.pause==='function')qrScanner.pause(true);
         }catch(_){}
@@ -1698,6 +1820,7 @@
           }catch(_){}
         }
         scannerRunning=false;
+        stopLegacyQr2Fallback();
         qrScanner=null;
         const reader=document.getElementById('qr-reader');
         if(reader)reader.innerHTML='';
@@ -1722,6 +1845,7 @@
           ()=>{}
         );
         scannerRunning=true;
+        if(activeClue===2)startLegacyQr2Fallback();
 
         // A very fast decode can happen before start() resolves. If it did,
         // immediately stop the now-started camera instead of leaving it hidden.
