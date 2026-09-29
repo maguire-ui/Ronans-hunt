@@ -1297,7 +1297,7 @@
           <p class="chest-message" id="chestMessage" aria-live="polite">Chest is locked. Find the key.</p>
           <button class="coordinate-chip" id="introCoordinates" type="button" aria-label="Inspect scrambled coordinates">
             <span class="coord-label">Scrambled Coordinates</span>
-            <span class="coord-value">53.54Δ86° N, 113.28Ω09° W</span>
+            <span class="coord-value">5Δ.ΨΞΩ8β° N, 1ΛЖ.ΦΨΩΞ9° W</span>
           </button>
           <button class="start-hunt" id="startHunt" type="button">
             <span>Take Me to the Hunt</span>
@@ -1410,7 +1410,7 @@
         <p class="main-chest-message" id="mainChestMessage" aria-live="polite">Chest is locked.</p>
         <button class="coordinate-chip" id="mainCoordinates" type="button" aria-label="Inspect scrambled coordinates">
           <span class="coord-label">Scrambled Coordinates</span>
-          <span class="coord-value">53.54Δ86° N, 113.28Ω09° W</span>
+          <span class="coord-value">5Δ.ΨΞΩ8β° N, 1ΛЖ.ΦΨΩΞ9° W</span>
         </button>
       </div>
     </section>
@@ -1421,7 +1421,7 @@
         <div class="coordinate-glyph" aria-hidden="true">⌖</div>
         <p class="qr-reward-kicker">Chest Coordinates</p>
         <h3 id="coordinateTitle">Scrambled Coordinates</h3>
-        <div class="coordinate-display" id="coordinateDisplay">53.54Δ86° N, 113.28Ω09° W</div>
+        <div class="coordinate-display" id="coordinateDisplay">5Δ.ΨΞΩ8β° N, 1ΛЖ.ΦΨΩΞ9° W</div>
         <p class="coordinate-copy" id="coordinateCopy">These coordinates might point to the location of the key. I can't read them. I need to descramble them.</p>
         <button class="coordinate-use" id="coordinateUse" type="button" hidden>Use the Descrambler</button>
         <p class="coordinate-need" id="coordinateNeed">Find the Coordinate Descrambler first.</p>
@@ -2548,7 +2548,7 @@
       function syncCoordinateChips(){
         const value=coordinatesDescrambled
           ? '53.54386° N, 113.28609° W'
-          : '53.54Δ86° N, 113.28Ω09° W';
+          : '5Δ.ΨΞΩ8β° N, 1ΛЖ.ΦΨΩΞ9° W';
         [introCoordinates,mainCoordinates].forEach(button=>{
           if(!button)return;
           const valueEl=button.querySelector('.coord-value');
@@ -2573,7 +2573,7 @@
           coordinateNeed.hidden=true;
         }else{
           coordinateTitle.textContent='Scrambled Coordinates';
-          coordinateDisplay.textContent='53.54Δ86° N, 113.28Ω09° W';
+          coordinateDisplay.textContent='5Δ.ΨΞΩ8β° N, 1ΛЖ.ΦΨΩΞ9° W';
           coordinateCopy.textContent="These coordinates might point to the location of the key. I can't read them. I need to descramble them.";
           coordinateUse.hidden=!hasTool;
           coordinateUse.textContent='Use the Descrambler';
